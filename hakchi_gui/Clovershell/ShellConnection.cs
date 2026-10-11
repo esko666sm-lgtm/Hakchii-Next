@@ -98,11 +98,11 @@ namespace com.clusterrr.clovershell
 
         public void Dispose()
         {
-            #warning Refactor this to get rid of Thread.Abort!
-            if (shellConnectionThread != null)
-                shellConnectionThread.Abort();
             if (socket != null)
                 socket.Close();
+            if (shellConnectionThread != null && shellConnectionThread != Thread.CurrentThread)
+                shellConnectionThread.Join(500);
+            shellConnectionThread = null;
             socket = null;
             if (id > 0)
                 connection.shellConnections[id] = null;

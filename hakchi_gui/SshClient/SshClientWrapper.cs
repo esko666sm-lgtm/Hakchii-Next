@@ -58,12 +58,6 @@ namespace com.clusterrr.ssh
                 }
                 else
                 {
-                    if (connectThread != null)
-                    {
-                        #warning Refactor this to get rid of Thread.Abort!
-                        connectThread.Abort();
-                        connectThread = null;
-                    }
                     if (listeners != null)
                     {
                         listeners.ForEach(l => l.Dispose());
@@ -79,6 +73,11 @@ namespace com.clusterrr.ssh
                         sshClient.Dispose();
                         sshClient = null;
                     }
+                    if (connectThread != null && connectThread != Thread.CurrentThread)
+                    {
+                        connectThread.Join(1000);
+                    }
+                    connectThread = null;
                 }
             }
         }
@@ -177,7 +176,7 @@ namespace com.clusterrr.ssh
         {
             try
             {
-                while (true)
+                while (enabled)
                 {
                     try
                     {
