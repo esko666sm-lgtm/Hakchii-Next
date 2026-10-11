@@ -28,6 +28,17 @@ namespace Hakchii.Next.Core.Recovery
             return manifestPath;
         }
 
+        public static OperationResult VerifyIfPresent(string backupPath)
+        {
+            if (string.IsNullOrWhiteSpace(backupPath))
+                return OperationResult.Fail("Backup path is required");
+            if (!File.Exists(backupPath))
+                return OperationResult.Fail("Backup file does not exist");
+            if (!File.Exists(backupPath + ".hakchii"))
+                return OperationResult.Ok();
+            return VerifyFor(backupPath);
+        }
+
         public static OperationResult VerifyFor(string backupPath)
         {
             if (string.IsNullOrWhiteSpace(backupPath))

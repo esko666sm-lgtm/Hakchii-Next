@@ -2105,6 +2105,10 @@ internal static
                         var systemIntegrity = FileIntegrityGuard.Capture(dumpFilename);
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
+                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename);
+                            if (!manifestVerification.Success)
+                                throw new InvalidOperationException(manifestVerification.Error);
+
                             var verification = systemIntegrity.Verify();
                             if (!verification.Success)
                                 throw new InvalidOperationException(verification.Error);
@@ -2120,6 +2124,10 @@ internal static
                         var userIntegrity = FileIntegrityGuard.Capture(dumpFilename);
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
+                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename);
+                            if (!manifestVerification.Success)
+                                throw new InvalidOperationException(manifestVerification.Error);
+
                             var verification = userIntegrity.Verify();
                             if (!verification.Success)
                                 throw new InvalidOperationException(verification.Error);
