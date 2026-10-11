@@ -1,6 +1,8 @@
 ﻿using com.clusterrr.clovershell;
 using com.clusterrr.hakchi_gui.Properties;
 using com.clusterrr.hakchi_gui.Tasks;
+using com.clusterrr.hakchi_gui.Next;
+using Hakchii.Next.Core.Device;
 using com.clusterrr.ssh;
 using SharpCompress.Archives;
 using System;
@@ -452,7 +454,8 @@ namespace com.clusterrr.hakchi_gui
                 DetectedConsoleType = ConsoleType.Unknown;
 
                 MinimalMemboot = Shell.Execute("source /hakchi/config; [ \"$cf_memboot\" = \"y\" ]") == 0;
-                UniqueID = Shell.ExecuteSimple("hakchi hwid").Replace(" ", "");
+                var deviceInfoService = new DeviceInfoService(new SystemShellTransportAdapter(Shell));
+                UniqueID = deviceInfoService.ReadHardwareIdAsync(CancellationToken.None).GetAwaiter().GetResult();
                 Trace.WriteLine($"Detected device unique ID: {UniqueID}");
 
                 // execution stops here for a minimal memboot
@@ -484,16 +487,16 @@ namespace com.clusterrr.hakchi_gui
                         // disable sync on legacy clovershell
                         CanSync = !(caller is ClovershellConnection);
 
-                        // detect console firmware/type
-                        SystemCode = Shell.ExecuteSimple("hakchi eval 'echo \"$sftype-$sfregion\"'", 2000, true).Trim();
+                        // detect console firmware/type and basic paths through Next Core
+                        var deviceInfo = deviceInfoService.ReadDetailsAsync(UniqueID, CancellationToken.None).GetAwaiter().GetResult();
+                        SystemCode = deviceInfo.SystemCode;
                         if (SystemCodeToConsoleType.ContainsKey(SystemCode))
                             DetectedConsoleType = SystemCodeToConsoleType[SystemCode];
                         CustomFirmwareLoaded = Shell.ExecuteSimple("hakchi currentFirmware", 2000, true) != "_nand_";
 
-                        // detect basic paths
-                        RemoteGameSyncPath = Shell.ExecuteSimple("hakchi findGameSyncStorage", 2000, true).Trim();
-                        OriginalGamesPath = Shell.ExecuteSimple("hakchi get gamepath", 2000, true).Trim();
-                        RootFsPath = Shell.ExecuteSimple("hakchi get rootfs", 2000, true).Trim();
+                        RemoteGameSyncPath = deviceInfo.GameStoragePath;
+                        OriginalGamesPath = deviceInfo.OriginalGamesPath;
+                        RootFsPath = deviceInfo.RootFsPath;
                         SquashFsPath = Shell.ExecuteSimple("hakchi get squashfs", 2000, true).Trim();
 
                         // load config
