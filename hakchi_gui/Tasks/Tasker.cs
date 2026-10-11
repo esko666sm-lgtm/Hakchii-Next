@@ -78,6 +78,8 @@ namespace com.clusterrr.hakchi_gui.Tasks
             get; set;
         }
 
+        public bool IsAbortRequested => abortRequested;
+
         // helpers to manage states
 
         public State TaskState
@@ -294,11 +296,9 @@ namespace com.clusterrr.hakchi_gui.Tasks
 
         public void Abort()
         {
-            if (thread != null)
-            {
-                #warning Refactor this to get rid of Thread.Abort!
-                thread.Abort();
-            }
+            abortRequested = true;
+            if (TaskConclusion == Conclusion.Undefined)
+                TaskConclusion = Conclusion.Abort;
         }
 
         // Views-related methods
@@ -331,6 +331,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
             this.Ready = false;
             this.CurrentTask = null;
             this.TaskConclusion = Conclusion.Undefined;
+            this.abortRequested = false;
             this.doneTasks = 0;
             this.doneWeight = 0;
 
@@ -379,6 +380,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
         private Queue<Task> tasks;
         private Task finalTask;
         private Thread thread;
+        private volatile bool abortRequested;
         private bool titleSet;
         private int doneTasks;
         private int doneWeight;
@@ -396,6 +398,9 @@ namespace com.clusterrr.hakchi_gui.Tasks
                 bool firstTask = true;
                 while (tasks.Any())
                 {
+                    if (abortRequested)
+                        break;
+
                     // pop out next task
                     CurrentTask = tasks.Dequeue();
                     Trace.WriteLine("Executing task: " + CurrentTask.displayName);
@@ -409,6 +414,12 @@ namespace com.clusterrr.hakchi_gui.Tasks
 
                     // run task and assign conclusion
                     Conclusion conclusion = CurrentTask.task(this, SyncObject);
+                    if (abortRequested)
+                    {
+                        if (TaskConclusion == Conclusion.Undefined)
+                            TaskConclusion = Conclusion.Abort;
+                        break;
+                    }
                     if (conclusion == Conclusion.Error || conclusion == Conclusion.Abort)
                     {
                         TaskConclusion = conclusion;
@@ -419,14 +430,6 @@ namespace com.clusterrr.hakchi_gui.Tasks
                     // increase counters
                     doneWeight += CurrentTask.weight;
                     ++doneTasks;
-                }
-            }
-            catch (ThreadAbortException)
-            {
-                Trace.WriteLine("Thread aborted");
-                if (TaskConclusion == Conclusion.Undefined)
-                {
-                    TaskConclusion = Conclusion.Abort;
                 }
             }
             catch (Exception ex)
@@ -487,10 +490,12 @@ namespace com.clusterrr.hakchi_gui.Tasks
                 int steps = milliseconds / step;
                 for (int i = 0; i < steps; ++i)
                 {
+                    if (tasker.IsAbortRequested)
+                        return Conclusion.Abort;
                     tasker.SetProgress(i, steps);
                     Thread.Sleep(step);
                 }
-                return Conclusion.Success;
+                return tasker.IsAbortRequested ? Conclusion.Abort : Conclusion.Success;
             };
         }
 
