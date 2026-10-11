@@ -16,17 +16,35 @@ namespace Hakchii.Next.Core.Modules
             this.installer = installer;
         }
 
-        public Task<OperationResult> InstallWithDependenciesAsync(ModulePackage package, CancellationToken cancellationToken)
-            => InstallAsync(
-                package,
-                new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                new HashSet<string>(StringComparer.OrdinalIgnoreCase),
-                cancellationToken);
+        public async Task<OperationResult> InstallWithDependenciesAsync(ModulePackage package, CancellationToken cancellationToken)
+        {
+            var visiting = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var installed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var installedThisRun = new List<string>();
+
+            var result = await InstallAsync(package, visiting, installed, installedThisRun, cancellationToken).ConfigureAwait(false);
+            if (result.Success)
+                return result;
+
+            for (var i = installedThisRun.Count - 1; i >= 0; i--)
+            {
+                try
+                {
+                    await installer.UninstallAsync(installedThisRun[i], cancellationToken).ConfigureAwait(false);
+                }
+                catch
+                {
+                }
+            }
+
+            return result;
+        }
 
         private async Task<OperationResult> InstallAsync(
             ModulePackage package,
             HashSet<string> visiting,
             HashSet<string> installed,
+            List<string> installedThisRun,
             CancellationToken cancellationToken)
         {
             if (package == null || string.IsNullOrWhiteSpace(package.Id))
@@ -49,14 +67,23 @@ namespace Hakchii.Next.Core.Modules
                     if (dependency == null)
                         return OperationResult.Fail("Missing module dependency: " + dependencyId);
 
-                    var dependencyResult = await InstallAsync(dependency, visiting, installed, cancellationToken).ConfigureAwait(false);
+                    var dependencyResult = await InstallAsync(
+                        dependency,
+                        visiting,
+                        installed,
+                        installedThisRun,
+                        cancellationToken).ConfigureAwait(false);
+
                     if (!dependencyResult.Success)
                         return dependencyResult;
                 }
 
                 var result = await installer.InstallAsync(package, cancellationToken).ConfigureAwait(false);
                 if (result.Success)
+                {
                     installed.Add(package.Id);
+                    installedThisRun.Add(package.Id);
+                }
 
                 return result;
             }
