@@ -33,6 +33,8 @@ namespace com.clusterrr.hakchi_gui
             public Thread ScraperFetchThread { get; set; } = null;
             public Thread ScraperImageFetchThread { get; set; } = null;
             public Thread ScraperSpineFetchThread { get; set; } = null;
+            public int ScraperImageGeneration;
+            public int ScraperSpineGeneration;
             public override string ToString() => Result.Game.Name;
         }
         public class Result
@@ -577,8 +579,7 @@ namespace com.clusterrr.hakchi_gui
                         textBoxDescription.Text = result.Description;
                     }
 
-                    #warning Refactor this to get rid of Thread.Abort!
-                    SelectedItem.ScraperImageFetchThread?.Abort();
+                    var imageGeneration = Interlocked.Increment(ref SelectedItem.ScraperImageGeneration);
                     SelectedItem.ScraperImageFetchThread = new Thread(() =>
                     {
                         Threads.Add(Thread.CurrentThread);
@@ -600,13 +601,14 @@ namespace com.clusterrr.hakchi_gui
                                 using (var wc = new HakchiWebClient())
                                 {
                                     var imageData = wc.DownloadData(frontUrl);
+                                    if (imageGeneration != Volatile.Read(ref item.ScraperImageGeneration)) return;
                                     using (var ms = new MemoryStream(imageData)) 
                                     {
                                         ms.Seek(0, SeekOrigin.Begin);
                                         var bitmap = new Bitmap(ms);
                                         item.Result.FrontArt = bitmap;
                                         item.Result.ChangedFrontArt = true;
-                                        if (SelectedItem == item)
+                                        if (imageGeneration == Volatile.Read(ref item.ScraperImageGeneration) && SelectedItem == item)
                                         {
                                             Invoke(new Action(() =>
                                             {
@@ -631,8 +633,7 @@ namespace com.clusterrr.hakchi_gui
                     });
                     SelectedItem.ScraperImageFetchThread.Start();
 
-                    #warning Refactor this to get rid of Thread.Abort!
-                    SelectedItem.ScraperSpineFetchThread?.Abort();
+                    var spineGeneration = Interlocked.Increment(ref SelectedItem.ScraperSpineGeneration);
                     SelectedItem.ScraperSpineFetchThread = new Thread(() =>
                     {
                         Threads.Add(Thread.CurrentThread);
@@ -648,12 +649,13 @@ namespace com.clusterrr.hakchi_gui
                                     try
                                     {
                                         var imageData = wc.DownloadData($"https://cdn.thegamesdb.net/images/original/clearlogo/{tgdbResult.ID}.png");
+                                        if (spineGeneration != Volatile.Read(ref item.ScraperSpineGeneration)) return;
 
                                         using (var ms = new MemoryStream(imageData))
                                         {
                                             ms.Seek(0, SeekOrigin.Begin);
                                             item.Result.ClearLogo = new Bitmap(ms);
-                                            if (item == SelectedItem)
+                                            if (spineGeneration == Volatile.Read(ref item.ScraperSpineGeneration) && item == SelectedItem)
                                             {
                                                 Invoke(new Action(() =>
                                                 {
