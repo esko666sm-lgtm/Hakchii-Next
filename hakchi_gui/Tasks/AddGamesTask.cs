@@ -402,7 +402,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                                         }
                                     }
                                 }
-                                catch (WebException ex) { }
+                                catch (WebException) { }
 
                                 try
                                 {
@@ -425,14 +425,14 @@ namespace com.clusterrr.hakchi_gui.Tasks
                                         }
                                     }
                                 }
-                                catch (WebException ex) { }
+                                catch (WebException) { }
                             }
                         }
-                        catch (Exception innerEx) { }
+                        catch (Exception) { }
                     }
                 }
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
 
             return Tasker.Conclusion.Success;
         }

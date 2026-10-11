@@ -307,7 +307,7 @@ namespace com.clusterrr.hakchi_gui
                         {
                             resultsTask.Wait();
                         } 
-                        catch (ThreadAbortException ex)
+                        catch (ThreadAbortException)
                         {
                             Threads.Remove(Thread.CurrentThread);
                             item.ScraperTasks[scraper].Remove(resultsTask);
@@ -625,8 +625,8 @@ namespace com.clusterrr.hakchi_gui
                             }
 
                         }
-                        catch (ThreadAbortException ex) { }
-                        catch (WebException ex) { }
+                        catch (ThreadAbortException) { }
+                        catch (WebException) { }
                         finally
                         {
                             item.ScraperImageFetchThread = null;
@@ -671,11 +671,11 @@ namespace com.clusterrr.hakchi_gui
                                             }
                                         }
                                     }
-                                    catch (WebException ex) { }
+                                    catch (WebException) { }
                                 }
                             }
                         }
-                        catch (ThreadAbortException ex) { }
+                        catch (ThreadAbortException) { }
                         finally
                         {
                             item.ScraperSpineFetchThread = null;
@@ -773,7 +773,7 @@ namespace com.clusterrr.hakchi_gui
                                 {
                                     resultsTask.Wait();
                                 }
-                                catch (ThreadAbortException ex)
+                                catch (ThreadAbortException)
                                 {
                                     Threads.Remove(Thread.CurrentThread);
                                     item.ScraperTasks[scraper].Remove(resultsTask);
@@ -908,7 +908,7 @@ namespace com.clusterrr.hakchi_gui
                     {
                         resultsTask.Wait();
                     }
-                    catch (ThreadAbortException ex)
+                    catch (ThreadAbortException)
                     {
                         Threads.Remove(Thread.CurrentThread);
                         item.ScraperTasks[scraper].Remove(resultsTask);

@@ -168,7 +168,7 @@ namespace com.clusterrr.hakchi_gui.Hmod
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
 

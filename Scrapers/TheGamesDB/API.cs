@@ -58,7 +58,7 @@ namespace TeamShinkansen.Scrapers.TheGamesDB
                     var deserialized = JsonConvert.DeserializeObject<responseType>(json);
                     return deserialized;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     return default(responseType);
                 }
