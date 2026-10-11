@@ -548,31 +548,28 @@ namespace com.clusterrr.hakchi_gui
                         }
                     }
 
-                    if (result.PlayerCount != null)
+                    switch (result.PlayerCount)
                     {
-                        switch (result.PlayerCount)
-                        {
-                            case 0:
-                            case 1:
-                                maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.OnePlayer;
-                                break;
+                        case 0:
+                        case 1:
+                            maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.OnePlayer;
+                            break;
 
-                            case 2:
-                                maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.TwoPlayer;
-                                break;
+                        case 2:
+                            maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.TwoPlayer;
+                            break;
 
-                            case 3:
-                                maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.ThreePlayer;
-                                break;
+                        case 3:
+                            maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.ThreePlayer;
+                            break;
 
-                            case 4:
-                                maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.FourPlayer;
-                                break;
+                        case 4:
+                            maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.FourPlayer;
+                            break;
 
-                            default:
-                                maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.FivePlayer;
-                                break;
-                        }
+                        default:
+                            maxPlayersComboBox.SelectedIndex = (int)MaxPlayers.FivePlayer;
+                            break;
                     }
 
                     if (result.Description != null)

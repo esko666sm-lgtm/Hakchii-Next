@@ -51,8 +51,6 @@ namespace com.clusterrr.hakchi_gui.Tasks
 
                 return Conclusion.Success;
             }
-
-            return Conclusion.Error;
         }
 
         public static Conclusion MountBase(Tasker tasker = null, Object syncObject = null)

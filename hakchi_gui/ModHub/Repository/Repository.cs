@@ -270,51 +270,6 @@ namespace com.clusterrr.hakchi_gui.ModHub.Repository
             {
                 throw new Exception($"HTTP request returned status {repoResponse.Result.Status}");
             }
-
-            var taskList = HTTPHelpers.GetHTTPResponseStringAsync(RepositoryListURL);
-
-            taskList.Wait();
-
-            list = (taskList.Result ?? "").Split("\n"[0]);
-
-            for (int i = 0; i < list.Length; i++)
-            {
-                var mod = list[i];
-                Item item = new Item(mod);
-                var taskExtract = HTTPHelpers.GetHTTPStatusCodeAsync($"{RepositoryURL}{mod}/extract");
-                var taskURL = HTTPHelpers.GetHTTPResponseStringAsync($"{RepositoryURL}{mod}/link");
-                var taskMD5 = HTTPHelpers.GetHTTPResponseStringAsync($"{RepositoryURL}{mod}/md5");
-                var taskSHA1 = HTTPHelpers.GetHTTPResponseStringAsync($"{RepositoryURL}{mod}/sha1");
-
-                taskExtract.Wait();
-                taskURL.Wait();
-                taskMD5.Wait();
-                taskSHA1.Wait();
-
-                item.setExtract(taskExtract.Result == HttpStatusCode.OK);
-                item.setURL(taskURL.Result);
-                item.setMD5(taskMD5.Result);
-                item.setSHA1(taskSHA1.Result);
-
-                for (var x = 0; x < HmodReadme.readmeFiles.Length; x++)
-                {
-                    var taskReadme = HTTPHelpers.GetHTTPResponseStringAsync($"{RepositoryURL}{mod}/{HmodReadme.readmeFiles[x]}");
-
-                    taskReadme.Wait();
-
-                    if (taskReadme.Result != null)
-                    {
-                        item.setReadme(taskReadme.Result, HmodReadme.readmeFiles[x].EndsWith(".md"));
-                        break;
-                    }
-                }
-
-                Items.Add(item);
-                RepositoryProgress?.Invoke(i + 1, list.Length);
-            }
-            RepositoryLoaded?.Invoke(Items.ToArray());
-
-            return;
         }
 
         public Item[] LoadTasker(Form hostForm)
