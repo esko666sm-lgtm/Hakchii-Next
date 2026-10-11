@@ -1,4 +1,5 @@
 ﻿using com.clusterrr.hakchi_gui.Properties;
+using Hakchii.Next.Core.Games;
 using Newtonsoft.Json;
 using pdj.tiny7z.Archive;
 using SharpCompress.Archives;
@@ -543,7 +544,17 @@ namespace com.clusterrr.hakchi_gui
             name = Regex.Replace(name, @" ?\(.*?\)| ?\[.*?\]", string.Empty);
             name = name.Replace("_", " ").Replace("  ", " ").Trim();
             game.desktop.Name = name;
-            game.desktop.Exec = $"{application} {hakchi.GamesPath}/{code}/{outputFileName} {args}";
+            var remoteRomPath = $"{hakchi.GamesPath}/{code}/{outputFileName}";
+            game.desktop.Exec = coreInfo == null
+                ? $"{application} {remoteRomPath} {args}"
+                : new LaunchCommandBuilder().Build(new GameEntry
+                {
+                    Id = code,
+                    RomPath = remoteRomPath,
+                    CoreId = coreInfo.Bin,
+                    CoreCommand = coreInfo.QualifiedBin,
+                    CoreArguments = coreInfo.DefaultArgs
+                });
             game.desktop.ProfilePath = hakchi.GamesProfilePath;
             game.desktop.IconPath = hakchi.GamesPath;
             game.desktop.Code = code;
@@ -801,7 +812,14 @@ namespace com.clusterrr.hakchi_gui
             }
             else
             {
-                Desktop.Exec = (coreInfo.QualifiedBin + $" {hakchi.GamesPath}/{Desktop.Code}/{newFileName} " + coreInfo.DefaultArgs).Trim();
+                Desktop.Exec = new LaunchCommandBuilder().Build(new GameEntry
+                {
+                    Id = Desktop.Code,
+                    RomPath = $"{hakchi.GamesPath}/{Desktop.Code}/{newFileName}",
+                    CoreId = coreInfo.Bin,
+                    CoreCommand = coreInfo.QualifiedBin,
+                    CoreArguments = coreInfo.DefaultArgs
+                });
             }
 
             if (ConfigIni.Instance.Compress)
