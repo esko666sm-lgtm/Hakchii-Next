@@ -27,6 +27,7 @@ namespace com.clusterrr.hakchi_gui.Controls
         public event ImageDeselected OnImageDeselected;
         public List<SearchQuery> Queries { get; } = new List<SearchQuery>();
         private Thread searchThread;
+        private int searchGeneration;
         private List<string> downloadedUrls = new List<string>();
 
         public void Deselect()
@@ -42,25 +43,24 @@ namespace com.clusterrr.hakchi_gui.Controls
         {
             imageList.Images.Clear();
             listView.Items.Clear();
-            downloadedUrls.Clear();
-
-            if (searchThread != null)
-            {
-                if (searchThread.IsAlive)
-                {
-#warning Refactor this to get rid of Thread.Abort!
-                    searchThread.Abort();
-                    searchThread = null;
-                }
-            }
+            var generation = Interlocked.Increment(ref searchGeneration);
+            lock (downloadedUrls)
+                downloadedUrls.Clear();
             searchThread = new Thread(() =>
             {
                 foreach (var image in customResults)
+                {
+                    if (generation != Volatile.Read(ref searchGeneration)) return;
                     ShowImage(image);
+                }
 
                 foreach (var query in Queries)
-                    SearchThread(query.Query, query.AdditionalVariables);
+                {
+                    if (generation != Volatile.Read(ref searchGeneration)) return;
+                    SearchThread(query.Query, query.AdditionalVariables, generation);
+                }
             });
+            searchThread.IsBackground = true;
             searchThread.Start();
         }
 
@@ -160,27 +160,33 @@ namespace com.clusterrr.hakchi_gui.Controls
 
         }
 
-        private void SearchThread(string query, string additionalVariables)
+        private void SearchThread(string query, string additionalVariables, int generation)
         {
-            try
+            var urls = GetImageUrls(query, additionalVariables);
+            foreach (var url in urls)
             {
-                var urls = GetImageUrls(query, additionalVariables);
-                foreach (var url in urls)
+                if (generation != Volatile.Read(ref searchGeneration)) return;
+                try
                 {
-                    try
+                    lock (downloadedUrls)
                     {
-                        if (!downloadedUrls.Contains(url))
-                        {
-                            downloadedUrls.Add(url);
-                            Trace.WriteLine("Downloading image: " + url);
-                            var image = DownloadImage(url);
-                            ShowImage(image);
-                        }
+                        if (generation != Volatile.Read(ref searchGeneration) || downloadedUrls.Contains(url))
+                            continue;
+                        downloadedUrls.Add(url);
                     }
-                    catch { }
+                    {
+                        Trace.WriteLine("Downloading image: " + url);
+                        var image = DownloadImage(url);
+                        if (generation != Volatile.Read(ref searchGeneration))
+                        {
+                            image.Dispose();
+                            return;
+                        }
+                        ShowImage(image);
+                    }
                 }
+                catch { }
             }
-            catch (ThreadAbortException) { }
         }
 
         protected void ShowImage(Image image)

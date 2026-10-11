@@ -18,12 +18,11 @@
                 components.Dispose();
             }
 
-            if (disposing && searchThread != null)
+            if (disposing)
             {
-                #warning Refactor this to get rid of Thread.Abort!
-                if (searchThread.IsAlive)
-                    searchThread.Abort();
-
+                System.Threading.Interlocked.Increment(ref searchGeneration);
+                if (searchThread != null && searchThread != System.Threading.Thread.CurrentThread)
+                    searchThread.Join(250);
                 searchThread = null;
             }
 
