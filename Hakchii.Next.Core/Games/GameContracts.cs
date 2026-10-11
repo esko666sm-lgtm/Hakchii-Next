@@ -20,6 +20,9 @@ namespace Hakchii.Next.Core.Games
     {
         IReadOnlyCollection<GameEntry> Games { get; }
         OperationResult Add(GameEntry game);
+        OperationResult Update(GameEntry game);
+        OperationResult Remove(string id);
+        OperationResult PrepareLaunch(string id, ILaunchCommandBuilder builder);
         GameEntry Find(string id);
     }
 }
