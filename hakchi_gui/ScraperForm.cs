@@ -87,6 +87,7 @@ namespace com.clusterrr.hakchi_gui
         }
 
         private List<Thread> Threads = new List<Thread>();
+        private volatile bool scraperClosing;
 
         private static Dictionary<IScraper, List<Task>> GetScraperTaskDictionary()
         {
@@ -342,6 +343,7 @@ namespace com.clusterrr.hakchi_gui
 
         private void PopulateScraperResults(IScraperResult results, ItemWrapper item)
         {
+            if (scraperClosing || IsDisposed || Disposing) return;
             this.Invoke(new Action(() =>
             {
                 if (SelectedItem != item)
@@ -826,11 +828,17 @@ namespace com.clusterrr.hakchi_gui
 
         private void ScraperForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            scraperClosing = true;
+            foreach (var item in listViewGames.Items.Cast<ListViewItem>()
+                .Select(i => i.Tag).OfType<ItemWrapper>())
+            {
+                Interlocked.Increment(ref item.ScraperImageGeneration);
+                Interlocked.Increment(ref item.ScraperSpineGeneration);
+            }
             foreach (var thread in Threads.ToArray())
-            {             
-                #warning Refactor this to get rid of Thread.Abort!
-                if (thread != null && thread.IsAlive)
-                    thread.Abort();
+            {
+                if (thread != null && thread.IsAlive && thread != Thread.CurrentThread)
+                    thread.Join(100);
             }
         }
 
