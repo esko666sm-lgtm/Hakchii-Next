@@ -30,13 +30,16 @@ namespace Hakchii.Next.Core.Modules
             if (candidates == null || exists == null)
                 return ModulePackageLookupResult.Fail("Module candidates are required");
 
-            var path = candidates.FirstOrDefault(exists);
-            if (path == null)
-                return ModulePackageLookupResult.Fail("Module package not found: " + moduleId);
+            var validator = new ModulePackageValidator();
+            foreach (var path in candidates.Where(exists))
+            {
+                var package = new ModulePackage { Id = moduleId, FilePath = path };
+                var validation = validator.Validate(package);
+                if (validation.Success)
+                    return ModulePackageLookupResult.Ok(package);
+            }
 
-            var package = new ModulePackage { Id = moduleId, FilePath = path };
-            var validation = new ModulePackageValidator().Validate(package);
-            return validation.Success ? ModulePackageLookupResult.Ok(package) : ModulePackageLookupResult.Fail(validation.Error);
+            return ModulePackageLookupResult.Fail("Module package not found: " + moduleId);
         }
     }
 }
