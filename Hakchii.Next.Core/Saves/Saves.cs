@@ -1,0 +1,7 @@
+﻿using System; using System.Collections.Generic; using System.Threading; using System.Threading.Tasks;
+namespace Hakchii.Next.Core.Saves {
+ public sealed class SaveSnapshot { public string GameId{get;set;} public byte[] Data{get;set;} public DateTime CreatedUtc{get;set;} }
+ public interface ISaveProvider { Task<SaveSnapshot> ReadAsync(string gameId,CancellationToken ct); Task<OperationResult> WriteAsync(SaveSnapshot save,CancellationToken ct); }
+ public sealed class SaveBackupService { private readonly ISaveProvider provider; private readonly Dictionary<string,Stack<SaveSnapshot>> backups=new Dictionary<string,Stack<SaveSnapshot>>(StringComparer.OrdinalIgnoreCase); public SaveBackupService(ISaveProvider p){provider=p;} public async Task<OperationResult> BackupAsync(string gameId,CancellationToken ct){var s=await provider.ReadAsync(gameId,ct).ConfigureAwait(false);if(s==null)return OperationResult.Fail("Save not found");if(!backups.TryGetValue(gameId,out var q))backups[gameId]=q=new Stack<SaveSnapshot>();q.Push(new SaveSnapshot{GameId=s.GameId,Data=(byte[])s.Data.Clone(),CreatedUtc=DateTime.UtcNow});return OperationResult.Ok();} public async Task<OperationResult> RestoreLatestAsync(string gameId,CancellationToken ct){if(!backups.TryGetValue(gameId,out var q)||q.Count==0)return OperationResult.Fail("No save backup");return await provider.WriteAsync(q.Peek(),ct).ConfigureAwait(false);} }
+ public interface ISaveEditor { OperationResult Apply(byte[] data); }
+}
