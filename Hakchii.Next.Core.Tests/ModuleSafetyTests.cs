@@ -23,6 +23,22 @@ public class ModuleSafetyTests
     }
 
     [Fact]
+    public void LocatorReturnsFirstExistingHmodCandidate()
+    {
+        var result = ModulePackageLocator.Resolve("retroarch", new[] { "a/retroarch.hmod", "b/retroarch.hmod" }, p => p.StartsWith("b/"));
+        Assert.True(result.Success);
+        Assert.Equal("b/retroarch.hmod", result.Value.FilePath);
+    }
+
+    [Fact]
+    public void LocatorFailsWhenHmodIsMissing()
+    {
+        var result = ModulePackageLocator.Resolve("missing", new[] { "a/missing.hmod" }, _ => false);
+        Assert.False(result.Success);
+        Assert.Contains("not found", result.Error, System.StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public async Task TransactionRollsBackCompletedStepsOnFailure()
     {
         var events = new List<string>();

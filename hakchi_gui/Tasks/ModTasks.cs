@@ -1,7 +1,9 @@
 ﻿using com.clusterrr.hakchi_gui.Properties;
 using com.clusterrr.util;
+using Hakchii.Next.Core.Modules;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using static com.clusterrr.hakchi_gui.Tasks.Tasker;
 
@@ -45,38 +47,41 @@ namespace com.clusterrr.hakchi_gui.Tasks
             {
                 tasker.SetStatus(Resources.TransferringMods);
                 var modName = hmod + ".hmod";
+                var candidates = new List<string>();
                 foreach (var dir in Shared.hmodDirectories)
+                    candidates.Add(Path.Combine(dir, modName));
+
+                var located = ModulePackageLocator.Resolve(hmod, candidates, path => Directory.Exists(path) || File.Exists(path));
+                if (!located.Success)
                 {
-                    string hmodHakchiPath = Shared.EscapeShellArgument($"{transferPath}/{modName}");
-                    if (Directory.Exists(Path.Combine(dir, modName)))
+                    Trace.WriteLine(located.Error);
+                    return Conclusion.Error;
+                }
+
+                var localPath = located.Value.FilePath;
+                string hmodHakchiPath = Shared.EscapeShellArgument($"{transferPath}/{modName}");
+                hakchi.Shell.ExecuteSimple($"mkdir -p {hmodHakchiPath}");
+
+                if (Directory.Exists(localPath))
+                {
+                    using (var hmodTar = new TarStream(localPath))
                     {
-
-                        hakchi.Shell.ExecuteSimple($"mkdir -p {hmodHakchiPath}");
-                        using (var hmodTar = new TarStream(Path.Combine(dir, modName)))
+                        if (hmodTar.Length > 0)
                         {
-                            if (hmodTar.Length > 0)
+                            using (TrackableStream hmodStream = new TrackableStream(hmodTar))
                             {
-                                using (TrackableStream hmodStream = new TrackableStream(hmodTar))
-                                {
-                                    hmodStream.OnProgress += tasker.OnProgress;
-                                    
-                                    hakchi.Shell.Execute($"tar -xvC {hmodHakchiPath}", hmodStream, null, null, 0, true);
-
-                                }
+                                hmodStream.OnProgress += tasker.OnProgress;
+                                hakchi.Shell.Execute($"tar -xvC {hmodHakchiPath}", hmodStream, null, null, 0, true);
                             }
                         }
-                        break;
                     }
-                    if (File.Exists(Path.Combine(dir, modName)))
+                }
+                else
+                {
+                    using (var hmodStream = new TrackableFileStream(localPath, FileMode.Open, FileAccess.Read))
                     {
-                        hakchi.Shell.ExecuteSimple($"mkdir -p {hmodHakchiPath}");
-                        using (var hmodStream = new TrackableFileStream(Path.Combine(dir, modName), FileMode.Open, FileAccess.Read))
-                        {
-                            hmodStream.OnProgress += tasker.OnProgress;
-
-                            hakchi.Shell.Execute($"tar -xzvC {hmodHakchiPath}", hmodStream, null, null, 0, true);
-                        }
-                        break;
+                        hmodStream.OnProgress += tasker.OnProgress;
+                        hakchi.Shell.Execute($"tar -xzvC {hmodHakchiPath}", hmodStream, null, null, 0, true);
                     }
                 }
                 return Conclusion.Success;
