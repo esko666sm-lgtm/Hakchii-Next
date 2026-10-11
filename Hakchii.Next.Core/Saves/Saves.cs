@@ -21,12 +21,14 @@ namespace Hakchii.Next.Core.Saves
     public sealed class SaveBackupService
     {
         private readonly ISaveProvider provider;
+        private readonly int maxBackupsPerGame;
         private readonly Dictionary<string, Stack<SaveSnapshot>> backups =
             new Dictionary<string, Stack<SaveSnapshot>>(StringComparer.OrdinalIgnoreCase);
 
-        public SaveBackupService(ISaveProvider provider)
+        public SaveBackupService(ISaveProvider provider, int maxBackupsPerGame = 10)
         {
             this.provider = provider;
+            this.maxBackupsPerGame = maxBackupsPerGame < 1 ? 1 : maxBackupsPerGame;
         }
 
         public async Task<OperationResult> BackupAsync(string gameId, CancellationToken ct)
@@ -52,7 +54,13 @@ namespace Hakchii.Next.Core.Saves
                 CreatedUtc = DateTime.UtcNow
             });
 
+            TrimHistory(stack);
             return OperationResult.Ok();
+        }
+
+        public int GetBackupCount(string gameId)
+        {
+            return backups.TryGetValue(gameId ?? string.Empty, out var stack) ? stack.Count : 0;
         }
 
         public async Task<OperationResult> RestoreLatestAsync(string gameId, CancellationToken ct)
@@ -61,6 +69,30 @@ namespace Hakchii.Next.Core.Saves
                 return OperationResult.Fail("No save backup");
 
             return await provider.WriteAsync(stack.Peek(), ct).ConfigureAwait(false);
+        }
+
+        public async Task<OperationResult> RestorePreviousAsync(string gameId, CancellationToken ct)
+        {
+            if (!backups.TryGetValue(gameId, out var stack) || stack.Count == 0)
+                return OperationResult.Fail("No save backup");
+
+            var snapshot = stack.Peek();
+            var result = await provider.WriteAsync(snapshot, ct).ConfigureAwait(false);
+            if (result.Success)
+                stack.Pop();
+            return result;
+        }
+
+        private void TrimHistory(Stack<SaveSnapshot> stack)
+        {
+            if (stack.Count <= maxBackupsPerGame)
+                return;
+
+            var newest = stack.ToArray();
+            stack.Clear();
+            var keep = Math.Min(maxBackupsPerGame, newest.Length);
+            for (var i = keep - 1; i >= 0; i--)
+                stack.Push(newest[i]);
         }
     }
 
