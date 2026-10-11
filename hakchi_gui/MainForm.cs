@@ -2069,7 +2069,7 @@ internal static
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpNand, dumpPath: dumpFilename));
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
-                            BackupManifest.WriteFor(dumpFilename);
+                            BackupManifest.WriteFor(dumpFilename, hakchi.UniqueID, hakchi.SystemCode);
                             return Conclusion.Success;
                         });
                         break;
@@ -2081,7 +2081,7 @@ internal static
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpSystemPartition, dumpPath: dumpFilename));
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
-                            BackupManifest.WriteFor(dumpFilename);
+                            BackupManifest.WriteFor(dumpFilename, hakchi.UniqueID, hakchi.SystemCode);
                             return Conclusion.Success;
                         });
                         break;
@@ -2093,7 +2093,7 @@ internal static
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpUserPartition, dumpPath: dumpFilename));
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
-                            BackupManifest.WriteFor(dumpFilename);
+                            BackupManifest.WriteFor(dumpFilename, hakchi.UniqueID, hakchi.SystemCode);
                             return Conclusion.Success;
                         });
                         break;
@@ -2105,7 +2105,7 @@ internal static
                         var systemIntegrity = FileIntegrityGuard.Capture(dumpFilename);
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
-                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename);
+                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename, hakchi.UniqueID, hakchi.SystemCode);
                             if (!manifestVerification.Success)
                                 throw new InvalidOperationException(manifestVerification.Error);
 
@@ -2124,7 +2124,7 @@ internal static
                         var userIntegrity = FileIntegrityGuard.Capture(dumpFilename);
                         tasker.AddTask((currentTasker, syncObject) =>
                         {
-                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename);
+                            var manifestVerification = BackupManifest.VerifyIfPresent(dumpFilename, hakchi.UniqueID, hakchi.SystemCode);
                             if (!manifestVerification.Success)
                                 throw new InvalidOperationException(manifestVerification.Error);
 
