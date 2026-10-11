@@ -196,7 +196,7 @@ namespace com.clusterrr.hakchi_gui.Hmod
                 else if (ext == ".7z" || ext == ".zip" || ext == ".rar" || ext == ".tar")
                 {
                     var newHmods = new List<string>();
-                    using (var extractor = ArchiveFactory.Open(file))
+                    using (var extractor = ArchiveFactory.OpenArchive(file))
                     {
                         TempHelpers.doWithTempFolder(temp =>
                         {

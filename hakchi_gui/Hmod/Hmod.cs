@@ -116,7 +116,7 @@ namespace com.clusterrr.hakchi_gui.Hmod
 
                     if (!skipExtraction)
                     {
-                        using (var reader = ReaderFactory.Open(File.OpenRead(dir)))
+                        using (var reader = ReaderFactory.OpenReader(File.OpenRead(dir)))
                         {
                             while (reader.MoveToNextEntry())
                             {

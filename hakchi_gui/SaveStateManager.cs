@@ -281,12 +281,12 @@ namespace com.clusterrr.hakchi_gui
                 {
                     hakchi.Shell.Execute("cd /var/lib/clover/profiles/0 && tar -cz " + code, null, save, null, 10000, true);
                     save.Seek(0, SeekOrigin.Begin);
-                    using (var extractor = ArchiveFactory.Open(save))
+                    using (var extractor = ArchiveFactory.OpenArchive(save))
                     {
                         using (var tar = new MemoryStream())
                         {
                             extractor.Entries.First().OpenEntryStream().CopyTo(tar);
-                            using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.Open(tar))
+                            using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.OpenArchive(tar))
                             {
                                 foreach (var f in extractorTar.Entries)
                                 {

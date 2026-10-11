@@ -113,7 +113,7 @@ namespace com.clusterrr.hakchi_gui
         public virtual void Archive(string destinationFile)
         {
             using (var file = File.Open(destinationFile, FileMode.Create))
-            using (var writer = WriterFactory.Open(file, SharpCompress.Common.ArchiveType.Tar, new WriterOptions(SharpCompress.Common.CompressionType.GZip)))
+            using (var writer = WriterFactory.OpenWriter(file, SharpCompress.Common.ArchiveType.Tar, new WriterOptions(SharpCompress.Common.CompressionType.GZip)))
             {
                 writer.WriteAll(basePath, "*", SearchOption.AllDirectories);
             }

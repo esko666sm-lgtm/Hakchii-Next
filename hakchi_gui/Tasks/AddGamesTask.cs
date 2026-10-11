@@ -94,7 +94,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                             Directory.CreateDirectory(tmp);
 
                             using (var file = File.OpenRead(sourceFileName))
-                            using (var reader = ReaderFactory.Open(file))
+                            using (var reader = ReaderFactory.OpenReader(file))
                             {
                                 reader.WriteAllToDirectory(tmp, new ExtractionOptions() { ExtractFullPath = true, PreserveFileTime = true });
                             }
@@ -126,7 +126,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                         }
                         else
                         {
-                            using (var extractor = ArchiveFactory.Open(sourceFileName))
+                            using (var extractor = ArchiveFactory.OpenArchive(sourceFileName))
                             {
                                 var filesInArchive = extractor.Entries;
                                 var gameFilesInArchive = new List<string>();

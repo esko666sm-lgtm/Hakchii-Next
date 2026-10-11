@@ -86,7 +86,7 @@ namespace com.clusterrr.hakchi_gui
                             hakchi.Shell.Execute($"du {paths}", null, sizeStream);
                             sizeStream.Seek(0, SeekOrigin.Begin);
 
-                            using (var extractor = ArchiveFactory.Open(desktopTarStream))
+                            using (var extractor = ArchiveFactory.OpenArchive(desktopTarStream))
                             using (var reader = extractor.ExtractAllEntries())
                             {
 

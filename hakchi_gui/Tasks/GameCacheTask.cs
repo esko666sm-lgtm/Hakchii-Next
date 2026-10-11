@@ -60,7 +60,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                                 string cmd = $"cd {gamesCloverPath}/{gameCode} && tar -c *";
                                 shell.Execute(cmd, null, tar, null, 10000, true);
                                 tar.Seek(0, SeekOrigin.Begin);
-                                using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.Open(tar))
+                                using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.OpenArchive(tar))
                                     extractorTar.WriteToDirectory(gamePath, new SharpCompress.Common.ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                             }
                             ++LoadedGames;

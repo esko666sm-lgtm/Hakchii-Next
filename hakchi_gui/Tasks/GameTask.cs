@@ -324,7 +324,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
             try
             {
                 var defaultGames = ResetAllOriginalGames ? NesApplication.AllDefaultGames.Select(g => g.Key) : NesApplication.CurrentDefaultGames;
-                using (var extractor = ArchiveFactory.Open(desktopEntriesArchiveFile))
+                using (var extractor = ArchiveFactory.OpenArchive(desktopEntriesArchiveFile))
                 using (var reader = extractor.ExtractAllEntries())
                 {
                     int i = 0;

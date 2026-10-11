@@ -2634,7 +2634,7 @@ internal static
                 }
                 if (Path.GetFileName(files[0]).ToLower().StartsWith("sfrom_tool") && (ext == ".rar" || ext == ".zip" || ext == ".rar"))
                 {
-                    using (var extractor = ArchiveFactory.Open(files[0]))
+                    using (var extractor = ArchiveFactory.OpenArchive(files[0]))
                     {
                         extractor.WriteToDirectory(Path.Combine(Program.BaseDirectoryExternal, "sfrom_tool"), new SharpCompress.Common.ExtractionOptions() { ExtractFullPath = true, Overwrite = true });
                     }
@@ -2683,7 +2683,7 @@ internal static
                 }
                 else if (ext == ".7z" || ext == ".zip" || ext == ".rar")
                 {
-                    using (var extractor = ArchiveFactory.Open(file))
+                    using (var extractor = ArchiveFactory.OpenArchive(file))
                     {
                         bool isMod = false;
                         foreach (var f in extractor.Entries)

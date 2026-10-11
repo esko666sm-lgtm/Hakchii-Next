@@ -38,7 +38,7 @@ namespace com.clusterrr.hakchi_gui
             try
             {
                 string desktopEntriesArchiveFile = Path.Combine(Path.Combine(Program.BaseDirectoryInternal, "data"), "desktop_entries.tar");
-                using (var extractor = ArchiveFactory.Open(desktopEntriesArchiveFile))
+                using (var extractor = ArchiveFactory.OpenArchive(desktopEntriesArchiveFile))
                 using (var reader = extractor.ExtractAllEntries())
                     while (reader.MoveToNextEntry())
                     {
@@ -178,7 +178,7 @@ namespace com.clusterrr.hakchi_gui
                     int extPos = gameFilePath.LastIndexOf('.');
                     if (extPos > -1 && compressedFiles.Contains(gameFilePath.Substring(extPos)))
                     {
-                        using (var extractor = ArchiveFactory.Open(gameFilePath))
+                        using (var extractor = ArchiveFactory.OpenArchive(gameFilePath))
                         {
                             if (extractor.Entries.Count() == 1)
                             {
@@ -732,7 +732,7 @@ namespace com.clusterrr.hakchi_gui
                 int extPos = file.LastIndexOf('.');
                 if (extPos > -1 && compressedFiles.Contains(file.Substring(extPos)))
                 {
-                    using (var extractor = ArchiveFactory.Open(file))
+                    using (var extractor = ArchiveFactory.OpenArchive(file))
                     {
                         if (extractor.Entries.Count() == 1)
                         {
@@ -934,7 +934,7 @@ namespace com.clusterrr.hakchi_gui
                 }
 
                 // check for original art in archive
-                using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.Open(Path.Combine(Program.BaseDirectoryInternal, "data", "original_art.tar")))
+                using (var extractorTar = SharpCompress.Archives.Tar.TarArchive.OpenArchive(Path.Combine(Program.BaseDirectoryInternal, "data", "original_art.tar")))
                 {
                     foreach (var f in extractorTar.Entries)
                     {
@@ -1607,7 +1607,7 @@ namespace com.clusterrr.hakchi_gui
                 foreach (var e in compressedExtensions)
                     if (file.ToLower().EndsWith(e) && exec.Contains(" " + Path.GetFileName(file) + " "))
                     {
-                        using (var archive = ArchiveFactory.Open(file))
+                        using (var archive = ArchiveFactory.OpenArchive(file))
                         {
                             if (archive.Entries.Count() == 1)
                             {
@@ -1642,7 +1642,7 @@ namespace com.clusterrr.hakchi_gui
         {
             foreach (var filename in DecompressPossible())
             {
-                using (var extractor = ArchiveFactory.Open(filename))
+                using (var extractor = ArchiveFactory.OpenArchive(filename))
                 {
                     Trace.WriteLine("Decompressing " + filename);
                     extractor.Entries.First().WriteToDirectory(basePath);

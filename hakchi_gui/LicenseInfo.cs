@@ -13,7 +13,7 @@ namespace com.clusterrr.hakchi_gui
             var licenses = new List<string>();
 
             using (var licenseMs = new MemoryStream(Properties.Resources.LicensesTar))
-            using (var extractor = ArchiveFactory.Open(licenseMs))
+            using (var extractor = ArchiveFactory.OpenArchive(licenseMs))
             using (var reader = extractor.ExtractAllEntries())
             {
                 while (reader.MoveToNextEntry())

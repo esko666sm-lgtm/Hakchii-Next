@@ -828,7 +828,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                         {
                             var tempFilename = Path.Combine(tempFolder, "dump.bin");
 
-                            using (var extractor = ArchiveFactory.Open(nandDump))
+                            using (var extractor = ArchiveFactory.OpenArchive(nandDump))
                             using (var entryStream = extractor.Entries.First().OpenEntryStream())
                             using (var extractedFile = File.Create(tempFilename))
                             {

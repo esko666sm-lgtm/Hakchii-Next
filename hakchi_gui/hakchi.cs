@@ -62,7 +62,7 @@ namespace com.clusterrr.hakchi_gui
                     return hakchiHmod;
                 }
 
-                using (var extractor = ArchiveFactory.Open(baseHmodsPath))
+                using (var extractor = ArchiveFactory.OpenArchive(baseHmodsPath))
                 {
                     var hakchiEntry = extractor.Entries.Where(e => e.Key == "./hakchi.hmod" || e.Key == "hakchi.hmod").First();
                     if (File.Exists(latestHmodFile) && File.GetLastWriteTime(latestHmodFile) > hakchiEntry.LastModifiedTime)
@@ -91,12 +91,12 @@ namespace com.clusterrr.hakchi_gui
                 using (Stream hakchiHmod = HmodStream)
                 {
                     MemoryStream tar = new MemoryStream();
-                    using (var extractor = ArchiveFactory.Open(hakchiHmod))
+                    using (var extractor = ArchiveFactory.OpenArchive(hakchiHmod))
                     using (var entryStream = extractor.Entries.First().OpenEntryStream())
                     {
                         entryStream.CopyTo(tar);
                         tar.Position = 0;
-                        return SharpCompress.Archives.Tar.TarArchive.Open(tar);
+                        return SharpCompress.Archives.Tar.TarArchive.OpenArchive(tar);
                     }
                 }
             }

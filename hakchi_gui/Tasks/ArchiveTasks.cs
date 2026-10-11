@@ -17,7 +17,7 @@ namespace com.clusterrr.hakchi_gui.Tasks
                 {
                     trackStream.OnProgress += tasker.OnProgress;
 
-                    using (var reader = ReaderFactory.Open(trackStream))
+                    using (var reader = ReaderFactory.OpenReader(trackStream))
                     {
                         reader.WriteAllToDirectory(destinationFolder, new SharpCompress.Common.ExtractionOptions() { ExtractFullPath = true, Overwrite = true, PreserveFileTime = true });
 

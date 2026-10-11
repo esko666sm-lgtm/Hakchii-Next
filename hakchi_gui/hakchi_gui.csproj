@@ -3,6 +3,7 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net48</TargetFramework>
+    <LangVersion>9.0</LangVersion>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <AssemblyName>hakchi</AssemblyName>
     <RootNamespace>com.clusterrr.hakchi_gui</RootNamespace>
@@ -96,9 +97,11 @@ Gert Driesen for SSH.NET.</Description>
     <PackageReference Include="LibUsbDotNet" Version="2.2.29" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="nQuant" Version="1.0.3" />
-    <PackageReference Include="SharpCompress" Version="0.40.0" />
+    <PackageReference Include="SharpCompress" Version="0.48.1" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Resources.Extensions" Version="10.0.0" />
     <PackageReference Include="System.Text.Json" Version="10.0.0" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="Tmds.MDns" Version="0.8.0" />
   </ItemGroup>
 
