@@ -2067,6 +2067,11 @@ internal static
                             return false;
 
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpNand, dumpPath: dumpFilename));
+                        tasker.AddTask((currentTasker, syncObject) =>
+                        {
+                            BackupManifest.WriteFor(dumpFilename);
+                            return Conclusion.Success;
+                        });
                         break;
 
                     case MembootTasks.NandTasks.DumpSystemPartition:
@@ -2074,6 +2079,11 @@ internal static
                             return false;
 
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpSystemPartition, dumpPath: dumpFilename));
+                        tasker.AddTask((currentTasker, syncObject) =>
+                        {
+                            BackupManifest.WriteFor(dumpFilename);
+                            return Conclusion.Success;
+                        });
                         break;
 
                     case MembootTasks.NandTasks.DumpUserPartition:
@@ -2081,6 +2091,11 @@ internal static
                             return false;
 
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.DumpUserPartition, dumpPath: dumpFilename));
+                        tasker.AddTask((currentTasker, syncObject) =>
+                        {
+                            BackupManifest.WriteFor(dumpFilename);
+                            return Conclusion.Success;
+                        });
                         break;
 
                     case MembootTasks.NandTasks.FlashSystemPartition:
