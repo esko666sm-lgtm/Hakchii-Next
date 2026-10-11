@@ -441,18 +441,6 @@
   <data name="buttonOpenWithFTP.Text" xml:space="preserve">
     <value>Open with FTP</value>
   </data>
-  <data name="&gt;&gt;buttonOpenWithFTP.Name" xml:space="preserve">
-    <value>buttonOpenWithFTP</value>
-  </data>
-  <data name="&gt;&gt;buttonOpenWithFTP.Type" xml:space="preserve">
-    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="&gt;&gt;buttonOpenWithFTP.Parent" xml:space="preserve">
-    <value>tableLayoutPanel1</value>
-  </data>
-  <data name="&gt;&gt;buttonOpenWithFTP.ZOrder" xml:space="preserve">
-    <value>3</value>
-  </data>
   <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>

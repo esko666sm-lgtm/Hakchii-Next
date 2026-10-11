@@ -2498,7 +2498,6 @@
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ProgressBar toolStripProgressBar;
         private System.Windows.Forms.ProgressBar progressBar1;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanelStatusBarInner;
         private System.Windows.Forms.GroupBox groupBoxButtons;
         private System.Windows.Forms.ToolStripMenuItem addPrefixToolStripMenuItem;
