@@ -358,6 +358,7 @@ namespace com.clusterrr.hakchi_gui
         private void MainForm_Shown(object sender, EventArgs e)
         {
             SetWindowTitle();
+            Next.WindowFrameStyling.ApplyHakchiBorder(this);
 
             // centralized upgrade actions system
             new Upgrade(this).Run();
