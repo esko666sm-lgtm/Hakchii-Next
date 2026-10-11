@@ -35,7 +35,10 @@ namespace Hakchii.Next.Core.Emulation
             }
             else core = registry.ForSystem(game.System).FirstOrDefault();
             if (core == null) return OperationResult.Fail("No compatible installed core found");
-            game.CoreId = core.Id; return OperationResult.Ok();
+            game.CoreId = core.Id;
+            game.CoreCommand = string.IsNullOrWhiteSpace(core.Command) ? null : core.Command;
+            game.CoreArguments = string.IsNullOrWhiteSpace(core.Arguments) ? null : core.Arguments;
+            return OperationResult.Ok();
         }
     }
 }

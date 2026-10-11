@@ -9,6 +9,8 @@ namespace Hakchii.Next.Core.Emulation
         public string DisplayName { get; set; }
         public IReadOnlyCollection<GameSystem> Systems { get; set; } = new GameSystem[0];
         public bool Installed { get; set; }
+        public string Command { get; set; }
+        public string Arguments { get; set; }
     }
     public interface ICoreRegistry
     {
