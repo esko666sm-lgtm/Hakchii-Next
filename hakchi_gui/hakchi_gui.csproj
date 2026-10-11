@@ -114,6 +114,7 @@ Gert Driesen for SSH.NET.</Description>
     <ProjectReference Include="..\Libraries\SSH.NET\src\Renci.SshNet\Renci.SshNet.csproj" />
     <ProjectReference Include="..\Libraries\tiny7z\tiny7z\tiny7z.csproj" />
     <ProjectReference Include="..\Scrapers\Scrapers.csproj" />
+    <ProjectReference Include="..\Hakchii.Next.Core\Hakchii.Next.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
