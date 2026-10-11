@@ -4,6 +4,7 @@ using com.clusterrr.hakchi_gui.ModHub;
 using com.clusterrr.hakchi_gui.ModHub.Repository;
 using com.clusterrr.hakchi_gui.Properties;
 using com.clusterrr.hakchi_gui.Tasks;
+using Hakchii.Next.Core.Recovery;
 using SharpCompress.Archives;
 using SpineGen.DrawingBitmaps;
 using System;
@@ -2086,6 +2087,14 @@ internal static
                         if (!DumpDialog(FileAccess.Read, "system_software.hsqs", "hsqs", out dumpFilename, $"{Resources.SystemSoftwareBackup}|*.bin;*.bz2;*.gz;*.hsqs;*.tar;*.tgz;*.xz"))
                             return false;
 
+                        var systemIntegrity = FileIntegrityGuard.Capture(dumpFilename);
+                        tasker.AddTask((currentTasker, syncObject) =>
+                        {
+                            var verification = systemIntegrity.Verify();
+                            if (!verification.Success)
+                                throw new InvalidOperationException(verification.Error);
+                            return Conclusion.Success;
+                        });
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.FlashSystemPartition, dumpPath: dumpFilename));
                         break;
 
@@ -2093,6 +2102,14 @@ internal static
                         if (!DumpDialog(FileAccess.Read, "user_data.tar", "tar", out dumpFilename, $"{Resources.UserDataBackup}|*.bz2;*.gz;*.hsqs;*.tar;*.xz"))
                             return false;
 
+                        var userIntegrity = FileIntegrityGuard.Capture(dumpFilename);
+                        tasker.AddTask((currentTasker, syncObject) =>
+                        {
+                            var verification = userIntegrity.Verify();
+                            if (!verification.Success)
+                                throw new InvalidOperationException(verification.Error);
+                            return Conclusion.Success;
+                        });
                         tasker.AddTasks(new MembootTasks(MembootTasks.MembootTaskType.FlashUserPartition, dumpPath: dumpFilename));
                         break;
 
