@@ -26,16 +26,24 @@ namespace Hakchii.Next.Core.Modules
             if (result.Success)
                 return result;
 
+            var rollbackErrors = new List<string>();
             for (var i = installedThisRun.Count - 1; i >= 0; i--)
             {
+                var moduleId = installedThisRun[i];
                 try
                 {
-                    await installer.UninstallAsync(installedThisRun[i], cancellationToken).ConfigureAwait(false);
+                    var rollbackResult = await installer.UninstallAsync(moduleId, cancellationToken).ConfigureAwait(false);
+                    if (!rollbackResult.Success)
+                        rollbackErrors.Add(moduleId + ": " + (rollbackResult.Error ?? "rollback failed"));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    rollbackErrors.Add(moduleId + ": " + ex.Message);
                 }
             }
+
+            if (rollbackErrors.Count > 0)
+                return OperationResult.Fail((result.Error ?? "install failed") + "; rollback failed: " + string.Join(" | ", rollbackErrors));
 
             return result;
         }
