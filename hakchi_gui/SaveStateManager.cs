@@ -1,4 +1,6 @@
 ﻿using com.clusterrr.hakchi_gui.Properties;
+using com.clusterrr.hakchi_gui.Next;
+using Hakchii.Next.Core.Saves;
 using SharpCompress.Archives;
 using System;
 using System.Collections;
@@ -237,12 +239,21 @@ namespace com.clusterrr.hakchi_gui
                         return false;
                     return true;
                 }))) return;
+
+                var provider = new SystemShellSaveProvider(hakchi.Shell);
+                var guard = new SaveImportGuard(new SaveBackupService(provider), provider);
                 foreach (var file in files)
                 {
-                    using (var f = new FileStream(file, FileMode.Open, FileAccess.Read))
+                    var gameId = GetImportedSaveGameId(file);
+                    var replacement = new SaveSnapshot
                     {
-                        hakchi.Shell.Execute("cd /var/lib/clover/profiles/0 && tar -xvz", f, null, null, 10000, true);
-                    }
+                        GameId = gameId,
+                        Data = File.ReadAllBytes(file),
+                        CreatedUtc = DateTime.UtcNow
+                    };
+                    var result = guard.ReplaceAsync(gameId, replacement, CancellationToken.None).GetAwaiter().GetResult();
+                    if (!result.Success)
+                        throw new IOException(result.Error);
                 }
             }
             catch (ThreadAbortException) { }
@@ -256,6 +267,32 @@ namespace com.clusterrr.hakchi_gui
                 catch { }
             }
             LoadSaveStatesList();
+        }
+
+        private static string GetImportedSaveGameId(string file)
+        {
+            using (var archive = ArchiveFactory.OpenArchive(file))
+            using (var tar = new MemoryStream())
+            {
+                var compressedEntry = archive.Entries.FirstOrDefault(entry => !entry.IsDirectory);
+                if (compressedEntry == null)
+                    throw new InvalidDataException("Save archive is empty");
+                using (var stream = compressedEntry.OpenEntryStream())
+                    stream.CopyTo(tar);
+                tar.Position = 0;
+                using (var tarArchive = SharpCompress.Archives.Tar.TarArchive.OpenArchive(tar))
+                {
+                    var saveEntry = tarArchive.Entries.FirstOrDefault(entry => !entry.IsDirectory);
+                    if (saveEntry == null)
+                        throw new InvalidDataException("Save archive contains no files");
+                    var key = saveEntry.Key.Replace('\\', '/').TrimStart('.', '/');
+                    var slash = key.IndexOf('/');
+                    var gameId = slash >= 0 ? key.Substring(0, slash) : key;
+                    if (string.IsNullOrWhiteSpace(gameId))
+                        throw new InvalidDataException("Save archive game id is missing");
+                    return gameId;
+                }
+            }
         }
 
         private void SaveStateManager_FormClosed(object sender, FormClosedEventArgs e)
