@@ -123,12 +123,19 @@ namespace com.clusterrr.hakchi_gui.Wireless.Bluetooth
 
         public void StopListener()
         {
-            if (cmdThread?.IsAlive ?? false)
-            {
-                #warning Refactor this to get rid of Thread.Abort!
-                cmdThread.Abort();
-            }
+            CanRunCommands = false;
+            CanRunCommand = false;
+            try { cmdReader?.Dispose(); } catch { }
+            try { cmdWriter?.Dispose(); } catch { }
+            try { cmdStream?.Dispose(); } catch { }
+            try { cmdConnection?.Close(); } catch { }
+            if (cmdThread != null && cmdThread != Thread.CurrentThread)
+                cmdThread.Join(1000);
             cmdThread = null;
+            cmdConnection = null;
+            cmdReader = null;
+            cmdWriter = null;
+            cmdStream = null;
             _cmdQueue.Clear();
             _Devices.Clear();
         }
@@ -401,7 +408,7 @@ namespace com.clusterrr.hakchi_gui.Wireless.Bluetooth
                 cmdWriter = null;
                 cmdStream = null;
             }
-            catch (Exception ex) { }
+            catch (Exception) { }
         }
 
         public void SetPower(bool state) => RunCommand($"power {(state ? "on" : "off")}");
@@ -481,8 +488,7 @@ namespace com.clusterrr.hakchi_gui.Wireless.Bluetooth
 
         public void Dispose()
         {
-            cmdConnection?.Close();
-            cmdConnection = null;
+            StopListener();
         }
     }
 }
