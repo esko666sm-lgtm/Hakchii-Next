@@ -670,6 +670,7 @@ namespace com.clusterrr.hakchi_gui
                     using (var sr = new StreamReader(stdErr))
                     {
                         var line = sr.ReadLine();
+                        if (line == null) return;
                         var match = Regex.Match(line, "^listening on (\\d+\\.\\d+\\.\\d+\\.\\d+):(\\d+)");
                         stdErr.Close();
                         splitStream.RemoveStream(stdErr).AddStreams(stderr);
@@ -679,12 +680,13 @@ namespace com.clusterrr.hakchi_gui
                         }
                     }
                 }
-                catch (ThreadAbortException) { }
+                catch (ObjectDisposedException) { }
+                catch (IOException) { }
             });
+            transferThread.IsBackground = true;
             transferThread.Start();
             int returnValue = hakchi.Shell.Execute($"nc -lv -w 60 -i 60 -s 0.0.0.0 -e {command}", null, null, splitStream, timeout, throwOnNonZero);
-            #warning Refactor this to get rid of Thread.Abort!
-            transferThread.Abort();
+            transferThread.Join(1000);
             return returnValue;
         }
 
