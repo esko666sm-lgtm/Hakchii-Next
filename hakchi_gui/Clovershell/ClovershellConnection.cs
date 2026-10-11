@@ -543,6 +543,7 @@ namespace com.clusterrr.clovershell
                 if (connection.stdin != null)
                 {
                     connection.stdinThread = new Thread(connection.stdinLoop);
+                    connection.stdinThread.IsBackground = true;
                     connection.stdinThread.Start();
                 }
             }
