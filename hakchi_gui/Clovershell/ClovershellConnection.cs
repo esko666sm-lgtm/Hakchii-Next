@@ -23,6 +23,7 @@ namespace com.clusterrr.clovershell
         UsbEndpointWriter epWriter = null;
         Thread mainThread = null;
         Thread shellListenerThread = null;
+        TcpListener shellServer = null;
         bool online = false;
         ushort shellPort = 1023;
         Queue<ShellConnection> pendingShellConnections = new Queue<ShellConnection>();
@@ -74,10 +75,6 @@ namespace com.clusterrr.clovershell
                 }
                 else
                 {
-                    #warning Refactor this to get rid of Thread.Abort!
-                    if (mainThread != null)
-                        mainThread.Abort();
-                    mainThread = null;
                     online = false;
                     if (device != null)
                         device.Close();
@@ -88,6 +85,9 @@ namespace com.clusterrr.clovershell
                     if (epWriter != null)
                         epWriter.Dispose();
                     epWriter = null;
+                    if (mainThread != null && mainThread != Thread.CurrentThread)
+                        mainThread.Join(1500);
+                    mainThread = null;
                 }
             }
         }
@@ -118,18 +118,21 @@ namespace com.clusterrr.clovershell
             set
             {
                 if (shellEnabled == value) return;
+                shellEnabled = value;
                 if (value)
                 {
-                    var server = new TcpListener(IPAddress.Any, shellPort);
+                    shellServer = new TcpListener(IPAddress.Any, shellPort);
                     Trace.WriteLine(string.Format("Listening port {0}", shellPort));
-                    server.Start();
+                    shellServer.Start();
                     shellListenerThread = new Thread(shellListenerThreadLoop);
-                    shellListenerThread.Start(server);
+                    shellListenerThread.Start(shellServer);
                 }
                 else
                 {
-                    #warning Refactor this to get rid of Thread.Abort!
-                    shellListenerThread.Abort();
+                    shellServer?.Stop();
+                    shellServer = null;
+                    if (shellListenerThread != null && shellListenerThread != Thread.CurrentThread)
+                        shellListenerThread.Join(500);
                     shellListenerThread = null;
                 }
                 for (var i = 0; i < shellConnections.Length; i++)
@@ -141,7 +144,6 @@ namespace com.clusterrr.clovershell
                 foreach (var pending in pendingShellConnections)
                     pending.Dispose();
                 pendingShellConnections.Clear();
-                shellEnabled = value;
             }
         }
 
@@ -455,9 +457,10 @@ namespace com.clusterrr.clovershell
             var server = o as TcpListener;
             try
             {
-                while (true)
+                while (shellEnabled)
                 {
-                    while (!server.Pending()) Thread.Sleep(100);
+                    while (shellEnabled && !server.Pending()) Thread.Sleep(100);
+                    if (!shellEnabled) break;
                     var connection = new ShellConnection(this, server.AcceptSocket());
                     Trace.WriteLine("Shell client connected");
                     try
@@ -488,6 +491,14 @@ namespace com.clusterrr.clovershell
                 }
             }
             catch (ThreadAbortException)
+            {
+                return;
+            }
+            catch (SocketException) when (!shellEnabled)
+            {
+                return;
+            }
+            catch (ObjectDisposedException) when (!shellEnabled)
             {
                 return;
             }
