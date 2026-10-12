@@ -176,11 +176,6 @@ namespace com.clusterrr.hakchi_gui
             }
         }
 
-        private static void MenuItem_Click(object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
         private void FormInitialize()
         {
             try
