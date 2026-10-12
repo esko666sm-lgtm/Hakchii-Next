@@ -38,6 +38,11 @@ namespace Hakchii.Next.Core.Recovery
             if (!result.Success)
                 throw new InvalidOperationException(result.Error ?? "Backup creation failed");
 
+            if (!File.Exists(destinationPath))
+                throw new InvalidOperationException("Backup file does not exist after creation");
+            if (new FileInfo(destinationPath).Length == 0)
+                throw new InvalidOperationException("Backup file is empty");
+
             return new BackupFileArtifact
             {
                 Path = destinationPath,
@@ -53,6 +58,7 @@ namespace Hakchii.Next.Core.Recovery
             if (artifact == null) return Task.FromResult(OperationResult.Fail("Backup artifact is required"));
             if (string.IsNullOrWhiteSpace(artifact.Path)) return Task.FromResult(OperationResult.Fail("Backup path is required"));
             if (!File.Exists(artifact.Path)) return Task.FromResult(OperationResult.Fail("Backup file does not exist"));
+            if (new FileInfo(artifact.Path).Length == 0) return Task.FromResult(OperationResult.Fail("Backup file is empty"));
             if (string.IsNullOrWhiteSpace(artifact.Sha256)) return Task.FromResult(OperationResult.Fail("Backup file has no SHA-256"));
 
             var actual = ComputeSha256(artifact.Path);
