@@ -44,19 +44,19 @@ namespace Hakchii.Next.Core.Device
             if (string.IsNullOrWhiteSpace(hardwareId))
                 throw new InvalidOperationException("Device hardware id is empty");
 
-            var systemCode = (await transport.ExecuteAsync("hakchi eval 'echo \"$sftype-$sfregion\"'", ct).ConfigureAwait(false)).Trim();
+            hardwareId = hardwareId.Trim();
+
+            var rawSystemCode = await transport.ExecuteAsync("hakchi eval 'echo \"$sftype-$sfregion\"'", ct).ConfigureAwait(false);
+            var systemCode = (rawSystemCode ?? string.Empty).Trim();
             if (string.IsNullOrWhiteSpace(systemCode))
                 throw new InvalidOperationException("Device system code is empty");
 
-            var gameStoragePath = RequireAbsoluteUnixPath(
-                (await transport.ExecuteAsync("hakchi findGameSyncStorage", ct).ConfigureAwait(false)).Trim(),
-                "Game storage path");
-            var originalGamesPath = RequireAbsoluteUnixPath(
-                (await transport.ExecuteAsync("hakchi get gamepath", ct).ConfigureAwait(false)).Trim(),
-                "Original games path");
-            var rootFsPath = RequireAbsoluteUnixPath(
-                (await transport.ExecuteAsync("hakchi get rootfs", ct).ConfigureAwait(false)).Trim(),
-                "Rootfs path");
+            var rawGameStoragePath = await transport.ExecuteAsync("hakchi findGameSyncStorage", ct).ConfigureAwait(false);
+            var gameStoragePath = RequireAbsoluteUnixPath((rawGameStoragePath ?? string.Empty).Trim(), "Game storage path");
+            var rawOriginalGamesPath = await transport.ExecuteAsync("hakchi get gamepath", ct).ConfigureAwait(false);
+            var originalGamesPath = RequireAbsoluteUnixPath((rawOriginalGamesPath ?? string.Empty).Trim(), "Original games path");
+            var rawRootFsPath = await transport.ExecuteAsync("hakchi get rootfs", ct).ConfigureAwait(false);
+            var rootFsPath = RequireAbsoluteUnixPath((rawRootFsPath ?? string.Empty).Trim(), "Rootfs path");
 
             return new DeviceInfo
             {
