@@ -7,7 +7,12 @@ using System.Security.Cryptography;
 
 namespace Hakchii.Next.Core.Saves
 {
-    public sealed class SaveFileStore
+    public interface ISaveBackupStore
+    {
+        OperationResult Save(SaveSnapshot snapshot);
+    }
+
+    public sealed class SaveFileStore : ISaveBackupStore
     {
         private readonly string rootDirectory;
 

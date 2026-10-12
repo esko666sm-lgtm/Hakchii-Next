@@ -21,13 +21,15 @@ namespace Hakchii.Next.Core.Saves
     public sealed class SaveBackupService
     {
         private readonly ISaveProvider provider;
+        private readonly ISaveBackupStore persistentStore;
         private readonly int maxBackupsPerGame;
         private readonly Dictionary<string, Stack<SaveSnapshot>> backups =
             new Dictionary<string, Stack<SaveSnapshot>>(StringComparer.OrdinalIgnoreCase);
 
-        public SaveBackupService(ISaveProvider provider, int maxBackupsPerGame = 10)
+        public SaveBackupService(ISaveProvider provider, int maxBackupsPerGame = 10, ISaveBackupStore persistentStore = null)
         {
             this.provider = provider;
+            this.persistentStore = persistentStore;
             this.maxBackupsPerGame = maxBackupsPerGame < 1 ? 1 : maxBackupsPerGame;
         }
 
@@ -44,16 +46,24 @@ namespace Hakchii.Next.Core.Saves
             if (!string.Equals(save.GameId, gameId, StringComparison.OrdinalIgnoreCase))
                 return OperationResult.Fail("Save belongs to a different game");
 
-            if (!backups.TryGetValue(gameId, out var stack))
-                backups[gameId] = stack = new Stack<SaveSnapshot>();
-
-            stack.Push(new SaveSnapshot
+            var snapshot = new SaveSnapshot
             {
                 GameId = save.GameId,
                 Data = (byte[])save.Data.Clone(),
                 CreatedUtc = DateTime.UtcNow
-            });
+            };
 
+            if (persistentStore != null)
+            {
+                var persistentResult = persistentStore.Save(snapshot);
+                if (!persistentResult.Success)
+                    return persistentResult;
+            }
+
+            if (!backups.TryGetValue(gameId, out var stack))
+                backups[gameId] = stack = new Stack<SaveSnapshot>();
+
+            stack.Push(snapshot);
             TrimHistory(stack);
             return OperationResult.Ok();
         }
