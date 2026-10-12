@@ -28,6 +28,11 @@ namespace Hakchii.Next.Core.Customization
             if (theme == null || string.IsNullOrWhiteSpace(theme.Id))
                 return OperationResult.Fail("Theme id is required");
 
+            theme.Id = theme.Id.Trim();
+            theme.Name = string.IsNullOrWhiteSpace(theme.Name) ? null : theme.Name.Trim();
+            theme.WallpaperPath = string.IsNullOrWhiteSpace(theme.WallpaperPath) ? null : theme.WallpaperPath.Trim();
+            theme.MusicPath = string.IsNullOrWhiteSpace(theme.MusicPath) ? null : theme.MusicPath.Trim();
+
             if (string.IsNullOrWhiteSpace(theme.WallpaperPath) &&
                 string.IsNullOrWhiteSpace(theme.MusicPath))
                 return OperationResult.Fail("Theme requires at least one asset");
@@ -63,7 +68,8 @@ namespace Hakchii.Next.Core.Customization
 
         public ThemePackage Find(string id)
         {
-            themes.TryGetValue(id ?? string.Empty, out var theme);
+            var normalizedId = string.IsNullOrWhiteSpace(id) ? string.Empty : id.Trim();
+            themes.TryGetValue(normalizedId, out var theme);
             return theme;
         }
     }
