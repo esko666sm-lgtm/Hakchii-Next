@@ -25,22 +25,31 @@ namespace Hakchii.Next.Core.Emulation
             cores.Add(core.Id, core);
             return OperationResult.Ok();
         }
-        public EmulatorCore Find(string id) { cores.TryGetValue(id ?? "", out var core); return core; }
+        public EmulatorCore Find(string id)
+        {
+            var normalizedId = string.IsNullOrWhiteSpace(id) ? string.Empty : id.Trim();
+            cores.TryGetValue(normalizedId, out var core);
+            return core;
+        }
         public IReadOnlyCollection<EmulatorCore> ForSystem(GameSystem system, bool installedOnly = true) => cores.Values.Where(c => (!installedOnly || c.Installed) && (c.Systems?.Contains(system) ?? false)).ToArray();
     }
 
     public sealed class CoreAssignmentService : ICoreAssignmentService
     {
         private readonly ICoreRegistry registry;
-        public CoreAssignmentService(ICoreRegistry registry) { this.registry = registry; }
+        public CoreAssignmentService(ICoreRegistry registry)
+        {
+            this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        }
         public OperationResult Assign(GameEntry game, string preferredCoreId = null)
         {
             if (game == null) return OperationResult.Fail("Game is required");
             EmulatorCore core = null;
             if (!string.IsNullOrWhiteSpace(preferredCoreId))
             {
-                core = registry.Find(preferredCoreId);
-                if (core == null || !core.Installed) return OperationResult.Fail("Preferred core is not installed: " + preferredCoreId);
+                var normalizedPreferredCoreId = preferredCoreId.Trim();
+                core = registry.Find(normalizedPreferredCoreId);
+                if (core == null || !core.Installed) return OperationResult.Fail("Preferred core is not installed: " + normalizedPreferredCoreId);
                 if (!(core.Systems?.Contains(game.System) ?? false)) return OperationResult.Fail("Preferred core is incompatible with game system");
             }
             else core = registry.ForSystem(game.System).FirstOrDefault();
