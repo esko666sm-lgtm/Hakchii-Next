@@ -26,7 +26,8 @@ public class CloverShellConnectionTests
         var connection = new CloverShellConsoleConnection(transport, Detector(false));
         var result = await connection.ConnectAsync(CancellationToken.None);
         Assert.False(result.Success);
-        Assert.False(transport.ConnectCalled);
+        Assert.True(transport.ConnectCalled);
+        Assert.False(connection.IsConnected);
     }
 
     private static IDeviceDetector Detector(bool found) => new DeviceDetector(new Probe(found));
