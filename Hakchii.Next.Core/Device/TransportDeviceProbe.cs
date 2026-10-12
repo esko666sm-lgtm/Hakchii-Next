@@ -21,8 +21,19 @@ namespace Hakchii.Next.Core.Device
                 return new DeviceProbeResult { Found = false };
 
             var info = new DeviceInfoService(transport);
-            var hardwareId = await info.ReadHardwareIdAsync(cancellationToken).ConfigureAwait(false);
+            string hardwareId;
+            try
+            {
+                hardwareId = await info.ReadHardwareIdAsync(cancellationToken).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException)
+            {
+                return new DeviceProbeResult { Found = false };
+            }
+
             var systemCode = (await transport.ExecuteAsync("hakchi eval 'echo \\\"$sftype-$sfregion\\\"'", cancellationToken).ConfigureAwait(false)).Trim();
+            if (string.IsNullOrWhiteSpace(systemCode))
+                return new DeviceProbeResult { Found = false };
 
             return new DeviceProbeResult
             {
