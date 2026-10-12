@@ -32,9 +32,11 @@ namespace Hakchii.Next.Core.Device
     {
         public static ConsoleProfile FromProbe(DeviceProbeResult probe)
         {
-            var text = ((probe.ProductName ?? "") + " " + (probe.HardwareId ?? "")).ToLowerInvariant();
-            var family = text.Contains("snes") || text.Contains("super famicom") ? ConsoleFamily.SnesMini
-                : text.Contains("nes") || text.Contains("famicom") || text.Contains("1f3a") ? ConsoleFamily.NesMini
+            var product = (probe.ProductName ?? string.Empty).Trim().ToLowerInvariant();
+            var hardware = (probe.HardwareId ?? string.Empty).Trim().ToLowerInvariant();
+
+            var family = IsSnes(product) ? ConsoleFamily.SnesMini
+                : IsNes(product, hardware) ? ConsoleFamily.NesMini
                 : ConsoleFamily.Unknown;
             return new ConsoleProfile
             {
@@ -43,6 +45,21 @@ namespace Hakchii.Next.Core.Device
                 Family = family,
                 Capabilities = CapabilitiesFor(family)
             };
+        }
+
+        private static bool IsSnes(string product)
+        {
+            return product == "snes" || product.StartsWith("snes-") ||
+                   product.Contains("classic mini: snes") ||
+                   product.Contains("super famicom");
+        }
+
+        private static bool IsNes(string product, string hardware)
+        {
+            return product == "nes" || product.StartsWith("nes-") ||
+                   product.Contains("classic mini: nes") ||
+                   product == "famicom" || product.Contains("classic mini: famicom") ||
+                   hardware.Contains("vid_1f3a") || hardware.Contains("1f3a");
         }
 
         public static DeviceCapabilities CapabilitiesFor(ConsoleFamily family)
