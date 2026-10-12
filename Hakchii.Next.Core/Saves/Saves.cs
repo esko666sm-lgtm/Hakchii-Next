@@ -82,7 +82,19 @@ namespace Hakchii.Next.Core.Saves
             if (historyStore == null)
                 return OperationResult.Fail("Persistent store does not support history loading");
 
-            var items = historyStore.List(gameId);
+            IReadOnlyCollection<SaveSnapshot> items;
+            try
+            {
+                items = historyStore.List(gameId);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail("Persistent save history could not be loaded: " + ex.Message);
+            }
+
+            if (items == null)
+                return OperationResult.Fail("Persistent save history store returned no items");
+
             var valid = new List<SaveSnapshot>();
             foreach (var snapshot in items)
             {
