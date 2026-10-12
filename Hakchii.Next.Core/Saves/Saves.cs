@@ -116,7 +116,7 @@ namespace Hakchii.Next.Core.Saves
             if (!backups.TryGetValue(gameId, out var stack) || stack.Count == 0)
                 return OperationResult.Fail("No save backup");
 
-            return await provider.WriteAsync(stack.Peek(), ct).ConfigureAwait(false);
+            return await WriteRestoreAsync(stack.Peek(), ct).ConfigureAwait(false);
         }
 
         public async Task<OperationResult> RestorePreviousAsync(string gameId, CancellationToken ct)
@@ -125,10 +125,27 @@ namespace Hakchii.Next.Core.Saves
                 return OperationResult.Fail("No save backup");
 
             var snapshot = stack.Peek();
-            var result = await provider.WriteAsync(snapshot, ct).ConfigureAwait(false);
+            var result = await WriteRestoreAsync(snapshot, ct).ConfigureAwait(false);
             if (result.Success)
                 stack.Pop();
             return result;
+        }
+
+        private async Task<OperationResult> WriteRestoreAsync(SaveSnapshot snapshot, CancellationToken ct)
+        {
+            try
+            {
+                var result = await provider.WriteAsync(snapshot, ct).ConfigureAwait(false);
+                return result ?? OperationResult.Fail("Save provider returned no restore result");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail("Save restore failed: " + ex.Message);
+            }
         }
 
         private void TrimHistory(Stack<SaveSnapshot> stack)
