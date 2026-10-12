@@ -39,6 +39,8 @@ namespace Hakchii.Next.Core.Saves
             if (snapshot.Data == null || snapshot.Data.Length == 0)
                 return OperationResult.Fail("Save data is empty");
 
+            snapshot.GameId = snapshot.GameId.Trim();
+
             try
             {
                 Directory.CreateDirectory(rootDirectory);
@@ -80,13 +82,25 @@ namespace Hakchii.Next.Core.Saves
             if (string.IsNullOrWhiteSpace(gameId) || !Directory.Exists(rootDirectory))
                 return new SaveSnapshot[0];
 
+            var normalizedGameId = gameId.Trim();
             var items = new List<SaveSnapshot>();
 
             foreach (var metaPath in Directory.GetFiles(rootDirectory, "*.meta"))
             {
-                var values = ReadValues(metaPath);
-                if (!values.TryGetValue("gameId", out var storedGameId) ||
-                    !string.Equals(storedGameId, gameId, StringComparison.OrdinalIgnoreCase))
+                Dictionary<string, string> values;
+                try
+                {
+                    values = ReadValues(metaPath);
+                }
+                catch
+                {
+                    continue;
+                }
+                if (!values.TryGetValue("gameId", out var storedGameId))
+                    continue;
+
+                storedGameId = storedGameId.Trim();
+                if (!string.Equals(storedGameId, normalizedGameId, StringComparison.OrdinalIgnoreCase))
                     continue;
 
                 if (!values.TryGetValue("createdUtc", out var createdText) ||
