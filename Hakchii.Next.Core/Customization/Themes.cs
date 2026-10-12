@@ -49,6 +49,18 @@ namespace Hakchii.Next.Core.Customization
             return OperationResult.Ok();
         }
 
+        public OperationResult RegisterPackage(string manifestPath, ThemePackageStore store)
+        {
+            if (store == null)
+                return OperationResult.Fail("Theme package store is required");
+
+            var load = store.LoadResolved(manifestPath);
+            if (!load.Success)
+                return OperationResult.Fail(load.Error);
+
+            return Register(load.Value);
+        }
+
         public ThemePackage Find(string id)
         {
             themes.TryGetValue(id ?? string.Empty, out var theme);
