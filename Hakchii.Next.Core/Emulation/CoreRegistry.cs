@@ -12,8 +12,18 @@ namespace Hakchii.Next.Core.Emulation
         public OperationResult Register(EmulatorCore core)
         {
             if (core == null || string.IsNullOrWhiteSpace(core.Id)) return OperationResult.Fail("Core id is required");
+            if (core.Systems == null || core.Systems.Count == 0) return OperationResult.Fail("Core must support at least one system");
+
+            core.Id = core.Id.Trim();
+            core.Command = string.IsNullOrWhiteSpace(core.Command) ? null : core.Command.Trim();
+            core.Arguments = string.IsNullOrWhiteSpace(core.Arguments) ? null : core.Arguments.Trim();
+
+            if (core.Command == null && core.Arguments != null)
+                return OperationResult.Fail("Core arguments require an explicit command");
             if (cores.ContainsKey(core.Id)) return OperationResult.Fail("Core already registered: " + core.Id);
-            cores.Add(core.Id,core); return OperationResult.Ok();
+
+            cores.Add(core.Id, core);
+            return OperationResult.Ok();
         }
         public EmulatorCore Find(string id) { cores.TryGetValue(id ?? "", out var core); return core; }
         public IReadOnlyCollection<EmulatorCore> ForSystem(GameSystem system, bool installedOnly = true) => cores.Values.Where(c => (!installedOnly || c.Installed) && (c.Systems?.Contains(system) ?? false)).ToArray();
