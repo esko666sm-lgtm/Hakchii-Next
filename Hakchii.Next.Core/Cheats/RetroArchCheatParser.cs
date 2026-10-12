@@ -12,6 +12,7 @@ namespace Hakchii.Next.Core.Cheats
             if (string.IsNullOrWhiteSpace(gameId) || string.IsNullOrWhiteSpace(text))
                 return new CheatEntry[0];
 
+            gameId = gameId.Trim();
             var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             foreach (var rawLine in text.Replace((char)13, (char)10).Split((char)10))
             {
@@ -26,7 +27,10 @@ namespace Hakchii.Next.Core.Cheats
                 if (value.Length >= 2 && value[0] == (char)34 && value[value.Length - 1] == (char)34)
                     value = value.Substring(1, value.Length - 2);
 
-                values[key] = Unescape(value);
+                if (values.ContainsKey(key))
+                    return new CheatEntry[0];
+
+                values.Add(key, Unescape(value));
             }
 
             int count = 0;
@@ -49,8 +53,8 @@ namespace Hakchii.Next.Core.Cheats
                 {
                     Id = gameId + ":" + i.ToString(CultureInfo.InvariantCulture),
                     GameId = gameId,
-                    Name = string.IsNullOrWhiteSpace(name) ? "Cheat " + (i + 1).ToString(CultureInfo.InvariantCulture) : name,
-                    Code = code,
+                    Name = string.IsNullOrWhiteSpace(name) ? "Cheat " + (i + 1).ToString(CultureInfo.InvariantCulture) : name.Trim(),
+                    Code = code.Trim(),
                     Enabled = string.Equals(enabledText, "true", StringComparison.OrdinalIgnoreCase)
                 });
             }
