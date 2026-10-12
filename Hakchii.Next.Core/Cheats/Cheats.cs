@@ -62,6 +62,16 @@ namespace Hakchii.Next.Core.Cheats
         public string Serialize(IEnumerable<CheatEntry> cheats)
         {
             var items = (cheats ?? new CheatEntry[0]).ToArray();
+            for (var i = 0; i < items.Length; i++)
+            {
+                var cheat = items[i];
+                if (cheat == null)
+                    throw new ArgumentException("Cheat entry is required", nameof(cheats));
+
+                cheat.Name = string.IsNullOrWhiteSpace(cheat.Name) ? null : cheat.Name.Trim();
+                cheat.Code = string.IsNullOrWhiteSpace(cheat.Code) ? string.Empty : cheat.Code.Trim();
+            }
+
             var lines = new List<string> { "cheats = \"" + items.Length + "\"" };
 
             for (var i = 0; i < items.Length; i++)
