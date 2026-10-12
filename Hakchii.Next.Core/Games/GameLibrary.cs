@@ -71,6 +71,9 @@ namespace Hakchii.Next.Core.Games
                 return OperationResult.Fail("Game id is required");
             if (string.IsNullOrWhiteSpace(game.RomPath))
                 return OperationResult.Fail("ROM path is required");
+
+            game.Id = game.Id.Trim();
+            game.RomPath = game.RomPath.Trim();
             return OperationResult.Ok();
         }
     }
