@@ -111,6 +111,21 @@ namespace Hakchii.Next.Core.Cheats
             var parsed = new RetroArchCheatParser().Parse(text, gameId);
             if (parsed.Count == 0) return OperationResult.Fail("No valid cheats found");
 
+            var existingIds = new HashSet<string>(
+                database.Find(new Hakchii.Next.Core.Games.GameEntry { Id = gameId })
+                    .Select(c => (c.Id ?? string.Empty).Trim()),
+                StringComparer.OrdinalIgnoreCase);
+            var batchIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var cheat in parsed)
+            {
+                var id = (cheat.Id ?? string.Empty).Trim();
+                if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(cheat.Code))
+                    return OperationResult.Fail("Invalid cheat");
+                if (existingIds.Contains(id) || !batchIds.Add(id))
+                    return OperationResult.Fail("Cheat already exists for game: " + id);
+            }
+
             foreach (var cheat in parsed)
             {
                 var result = database.Add(cheat);
