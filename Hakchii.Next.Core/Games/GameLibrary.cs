@@ -33,7 +33,8 @@ namespace Hakchii.Next.Core.Games
         public OperationResult Remove(string id)
         {
             if (string.IsNullOrWhiteSpace(id)) return OperationResult.Fail("Game id is required");
-            if (!games.Remove(id)) return OperationResult.Fail("Game does not exist: " + id);
+            var normalizedId = id.Trim();
+            if (!games.Remove(normalizedId)) return OperationResult.Fail("Game does not exist: " + normalizedId);
             return OperationResult.Ok();
         }
 
@@ -61,7 +62,8 @@ namespace Hakchii.Next.Core.Games
 
         public GameEntry Find(string id)
         {
-            games.TryGetValue(id ?? string.Empty, out var game);
+            var normalizedId = string.IsNullOrWhiteSpace(id) ? string.Empty : id.Trim();
+            games.TryGetValue(normalizedId, out var game);
             return game;
         }
 
