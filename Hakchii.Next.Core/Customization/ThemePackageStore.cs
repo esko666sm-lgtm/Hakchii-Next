@@ -50,10 +50,20 @@ namespace Hakchii.Next.Core.Customization
         {
             if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return null;
 
-            var values = File.ReadAllLines(path)
-                .Select(line => line.Split(new[] { '=' }, 2))
-                .Where(parts => parts.Length == 2)
-                .ToDictionary(parts => parts[0], parts => parts[1], StringComparer.OrdinalIgnoreCase);
+            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var line in File.ReadAllLines(path))
+            {
+                var parts = line.Split(new[] { '=' }, 2);
+                if (parts.Length != 2) continue;
+
+                var key = parts[0].Trim();
+                var value = parts[1].Trim();
+                if (string.IsNullOrWhiteSpace(key)) return null;
+                if (values.ContainsKey(key))
+                    throw new InvalidDataException("Duplicate theme manifest key: " + key);
+
+                values.Add(key, value);
+            }
 
             values.TryGetValue("id", out var id);
             values.TryGetValue("name", out var name);
@@ -64,16 +74,25 @@ namespace Hakchii.Next.Core.Customization
 
             return new ThemePackage
             {
-                Id = id,
-                Name = name,
-                WallpaperPath = wallpaper,
-                MusicPath = music
+                Id = id.Trim(),
+                Name = string.IsNullOrWhiteSpace(name) ? null : name.Trim(),
+                WallpaperPath = string.IsNullOrWhiteSpace(wallpaper) ? null : wallpaper.Trim(),
+                MusicPath = string.IsNullOrWhiteSpace(music) ? null : music.Trim()
             };
         }
 
         public ThemePackageLoadResult LoadResolved(string manifestPath)
         {
-            var theme = LoadManifest(manifestPath);
+            ThemePackage theme;
+            try
+            {
+                theme = LoadManifest(manifestPath);
+            }
+            catch (Exception ex)
+            {
+                return ThemePackageLoadResult.Fail("Theme manifest is invalid: " + ex.Message);
+            }
+
             if (theme == null)
                 return ThemePackageLoadResult.Fail("Theme manifest is missing or invalid");
 
