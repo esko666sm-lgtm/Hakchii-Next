@@ -30,10 +30,18 @@ namespace Hakchii.Next.Core.Modules
             if (candidates == null || exists == null)
                 return ModulePackageLookupResult.Fail("Module candidates are required");
 
+            var normalizedModuleId = moduleId.Trim();
+            var normalizedCandidates = candidates
+                .Where(path => !string.IsNullOrWhiteSpace(path))
+                .Select(path => path.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
             var validator = new ModulePackageValidator();
-            foreach (var path in candidates.Where(exists))
+            foreach (var path in normalizedCandidates)
             {
-                var package = new ModulePackage { Id = moduleId, FilePath = path };
+                if (!exists(path)) continue;
+
+                var package = new ModulePackage { Id = normalizedModuleId, FilePath = path };
                 var validation = validator.Validate(package);
                 if (validation.Success)
                     return ModulePackageLookupResult.Ok(package);
