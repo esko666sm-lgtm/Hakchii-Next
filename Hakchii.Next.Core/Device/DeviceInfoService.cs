@@ -48,13 +48,23 @@ namespace Hakchii.Next.Core.Device
             if (string.IsNullOrWhiteSpace(systemCode))
                 throw new InvalidOperationException("Device system code is empty");
 
+            var gameStoragePath = RequireAbsoluteUnixPath(
+                (await transport.ExecuteAsync("hakchi findGameSyncStorage", ct).ConfigureAwait(false)).Trim(),
+                "Game storage path");
+            var originalGamesPath = RequireAbsoluteUnixPath(
+                (await transport.ExecuteAsync("hakchi get gamepath", ct).ConfigureAwait(false)).Trim(),
+                "Original games path");
+            var rootFsPath = RequireAbsoluteUnixPath(
+                (await transport.ExecuteAsync("hakchi get rootfs", ct).ConfigureAwait(false)).Trim(),
+                "Rootfs path");
+
             return new DeviceInfo
             {
                 HardwareId = hardwareId,
                 SystemCode = systemCode,
-                GameStoragePath = (await transport.ExecuteAsync("hakchi findGameSyncStorage", ct).ConfigureAwait(false)).Trim(),
-                OriginalGamesPath = (await transport.ExecuteAsync("hakchi get gamepath", ct).ConfigureAwait(false)).Trim(),
-                RootFsPath = (await transport.ExecuteAsync("hakchi get rootfs", ct).ConfigureAwait(false)).Trim()
+                GameStoragePath = gameStoragePath,
+                OriginalGamesPath = originalGamesPath,
+                RootFsPath = rootFsPath
             };
         }
 
@@ -62,6 +72,13 @@ namespace Hakchii.Next.Core.Device
         {
             var hardwareId = await ReadHardwareIdAsync(ct).ConfigureAwait(false);
             return await ReadDetailsAsync(hardwareId, ct).ConfigureAwait(false);
+        }
+
+        private static string RequireAbsoluteUnixPath(string path, string label)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !path.StartsWith("/", StringComparison.Ordinal))
+                throw new InvalidOperationException(label + " is invalid");
+            return path;
         }
     }
 }
