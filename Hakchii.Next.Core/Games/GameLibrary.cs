@@ -46,7 +46,11 @@ namespace Hakchii.Next.Core.Games
 
             try
             {
-                game.LaunchCommand = builder.Build(game);
+                var command = builder.Build(game);
+                if (string.IsNullOrWhiteSpace(command))
+                    return OperationResult.Fail("Launch command is required");
+
+                game.LaunchCommand = command.Trim();
                 return OperationResult.Ok();
             }
             catch (Exception ex)
