@@ -12,12 +12,20 @@ namespace Hakchii.Next.Core.Modules
             if (package == null) return OperationResult.Fail("Module package is required");
             if (string.IsNullOrWhiteSpace(package.Id)) return OperationResult.Fail("Module id is required");
             if (string.IsNullOrWhiteSpace(package.FilePath)) return OperationResult.Fail("Module file path is required");
+
+            package.Id = package.Id.Trim();
+            package.FilePath = package.FilePath.Trim();
+
             if (!string.Equals(Path.GetExtension(package.FilePath), ".hmod", StringComparison.OrdinalIgnoreCase))
                 return OperationResult.Fail("Module package must use .hmod extension");
 
-            var dependencies = package.Dependencies ?? new string[0];
+            var dependencies = (package.Dependencies ?? new string[0])
+                .Select(x => x == null ? null : x.Trim())
+                .ToArray();
             if (dependencies.Any(x => string.IsNullOrWhiteSpace(x)))
                 return OperationResult.Fail("Module dependency id is invalid");
+
+            package.Dependencies = dependencies;
 
             if (dependencies.Any(x => string.Equals(x, package.Id, StringComparison.OrdinalIgnoreCase)))
                 return OperationResult.Fail("Module cannot depend on itself");
