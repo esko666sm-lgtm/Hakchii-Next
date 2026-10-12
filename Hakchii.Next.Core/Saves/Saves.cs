@@ -167,16 +167,31 @@ namespace Hakchii.Next.Core.Saves
                 return OperationResult.Fail("Replacement save belongs to a different game");
 
             var backup = await backups.BackupAsync(gameId, ct).ConfigureAwait(false);
-            var write = await provider.WriteAsync(replacement, ct).ConfigureAwait(false);
+            if (!backup.Success)
+                return OperationResult.Fail("Safety backup failed: " + (backup.Error ?? "unknown error"));
+
+            OperationResult write;
+            try
+            {
+                write = await provider.WriteAsync(replacement, ct).ConfigureAwait(false);
+                if (write == null)
+                    write = OperationResult.Fail("Save provider returned no write result");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                write = OperationResult.Fail("Save write failed: " + ex.Message);
+            }
+
             if (write.Success)
                 return write;
 
-            if (backup.Success)
-            {
-                var restore = await backups.RestoreLatestAsync(gameId, ct).ConfigureAwait(false);
-                if (!restore.Success)
-                    return OperationResult.Fail((write.Error ?? "write failed") + "; rollback failed: " + restore.Error);
-            }
+            var restore = await backups.RestoreLatestAsync(gameId, ct).ConfigureAwait(false);
+            if (!restore.Success)
+                return OperationResult.Fail((write.Error ?? "write failed") + "; rollback failed: " + restore.Error);
 
             return write;
         }
