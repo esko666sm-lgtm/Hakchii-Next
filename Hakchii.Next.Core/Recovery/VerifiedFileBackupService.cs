@@ -61,7 +61,16 @@ namespace Hakchii.Next.Core.Recovery
             if (new FileInfo(artifact.Path).Length == 0) return Task.FromResult(OperationResult.Fail("Backup file is empty"));
             if (string.IsNullOrWhiteSpace(artifact.Sha256)) return Task.FromResult(OperationResult.Fail("Backup file has no SHA-256"));
 
-            var actual = ComputeSha256(artifact.Path);
+            string actual;
+            try
+            {
+                actual = ComputeSha256(artifact.Path);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return Task.FromResult(OperationResult.Fail("Unable to verify backup file: " + ex.Message));
+            }
+
             if (!string.Equals(actual, artifact.Sha256.Trim(), StringComparison.OrdinalIgnoreCase))
                 return Task.FromResult(OperationResult.Fail("Backup SHA-256 mismatch"));
 
@@ -72,7 +81,20 @@ namespace Hakchii.Next.Core.Recovery
         {
             var verified = await VerifyAsync(artifact, ct).ConfigureAwait(false);
             if (!verified.Success) return verified;
-            return await transport.RestoreAsync(artifact.Path, ct).ConfigureAwait(false);
+
+            try
+            {
+                var result = await transport.RestoreAsync(artifact.Path, ct).ConfigureAwait(false);
+                return result ?? OperationResult.Fail("Backup restore transport returned no result");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail("Backup restore failed: " + ex.Message);
+            }
         }
 
         private static string ComputeSha256(string path)
