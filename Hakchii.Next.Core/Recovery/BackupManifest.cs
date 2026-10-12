@@ -75,7 +75,20 @@ namespace Hakchii.Next.Core.Recovery
             if (!File.Exists(manifestPath))
                 return OperationResult.Fail("Backup manifest does not exist");
 
-            var values = ReadValues(manifestPath);
+            System.Collections.Generic.Dictionary<string, string> values;
+            try
+            {
+                values = ReadValues(manifestPath);
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail("Backup manifest is invalid: " + ex.Message);
+            }
+
+            if (values.TryGetValue("file", out var expectedFile) &&
+                !string.IsNullOrWhiteSpace(expectedFile) &&
+                !string.Equals(expectedFile.Trim(), Path.GetFileName(backupPath), StringComparison.OrdinalIgnoreCase))
+                return OperationResult.Fail("Backup manifest file name mismatch");
 
             if (!values.TryGetValue("sha256", out var expectedHash))
                 return OperationResult.Fail("Backup manifest has no SHA-256");
