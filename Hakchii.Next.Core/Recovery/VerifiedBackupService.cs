@@ -30,7 +30,7 @@ namespace Hakchii.Next.Core.Recovery
             return new BackupImage
             {
                 Id = Guid.NewGuid().ToString("N"),
-                Data = data,
+                Data = (byte[])data.Clone(),
                 Sha256 = ComputeSha256(data),
                 CreatedUtc = DateTime.UtcNow
             };
@@ -54,7 +54,9 @@ namespace Hakchii.Next.Core.Recovery
         {
             var verified = await VerifyAsync(image, ct).ConfigureAwait(false);
             if (!verified.Success) return verified;
-            return await transport.WriteAsync(image.Data, ct).ConfigureAwait(false);
+
+            var result = await transport.WriteAsync((byte[])image.Data.Clone(), ct).ConfigureAwait(false);
+            return result ?? OperationResult.Fail("Backup transport returned no restore result");
         }
 
         private static string ComputeSha256(byte[] data)
