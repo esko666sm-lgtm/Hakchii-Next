@@ -12,8 +12,8 @@ namespace Hakchii.Next.Core.Modules
 
         public ModuleService(IModuleRepository repository, IModuleInstaller installer)
         {
-            this.repository = repository;
-            this.installer = installer;
+            this.repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            this.installer = installer ?? throw new ArgumentNullException(nameof(installer));
         }
 
         public async Task<OperationResult> InstallWithDependenciesAsync(ModulePackage package, CancellationToken cancellationToken)
