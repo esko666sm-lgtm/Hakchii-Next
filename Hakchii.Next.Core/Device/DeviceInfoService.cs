@@ -1,4 +1,6 @@
-﻿using System.Threading;
+using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hakchii.Next.Core.Device
@@ -28,15 +30,28 @@ namespace Hakchii.Next.Core.Device
 
         public async Task<string> ReadHardwareIdAsync(CancellationToken ct)
         {
-            return (await transport.ExecuteAsync("hakchi hwid", ct).ConfigureAwait(false)).Replace(" ", "");
+            var raw = await transport.ExecuteAsync("hakchi hwid", ct).ConfigureAwait(false);
+            var normalized = new string((raw ?? string.Empty).Where(ch => !char.IsWhiteSpace(ch)).ToArray());
+
+            if (string.IsNullOrWhiteSpace(normalized))
+                throw new InvalidOperationException("Device hardware id is empty");
+
+            return normalized;
         }
 
         public async Task<DeviceInfo> ReadDetailsAsync(string hardwareId, CancellationToken ct)
         {
+            if (string.IsNullOrWhiteSpace(hardwareId))
+                throw new InvalidOperationException("Device hardware id is empty");
+
+            var systemCode = (await transport.ExecuteAsync("hakchi eval 'echo \"$sftype-$sfregion\"'", ct).ConfigureAwait(false)).Trim();
+            if (string.IsNullOrWhiteSpace(systemCode))
+                throw new InvalidOperationException("Device system code is empty");
+
             return new DeviceInfo
             {
                 HardwareId = hardwareId,
-                SystemCode = (await transport.ExecuteAsync("hakchi eval 'echo \\\"$sftype-$sfregion\\\"'", ct).ConfigureAwait(false)).Trim(),
+                SystemCode = systemCode,
                 GameStoragePath = (await transport.ExecuteAsync("hakchi findGameSyncStorage", ct).ConfigureAwait(false)).Trim(),
                 OriginalGamesPath = (await transport.ExecuteAsync("hakchi get gamepath", ct).ConfigureAwait(false)).Trim(),
                 RootFsPath = (await transport.ExecuteAsync("hakchi get rootfs", ct).ConfigureAwait(false)).Trim()
