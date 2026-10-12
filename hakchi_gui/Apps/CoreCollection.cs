@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using SharpCompress.Archives;
+using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -109,22 +110,26 @@ namespace com.clusterrr.hakchi_gui
 
             // list base info files present in "libretro_cores.tgz"
             cores = new Dictionary<string, CoreInfo>();
-            using (var extractor = ArchiveFactory.OpenArchive(Shared.PathCombine(Program.BaseDirectoryInternal, "data", "libretro_cores.tar")))
-            using (var reader = extractor.ExtractAllEntries())
+            using (var archiveStream = File.OpenRead(Shared.PathCombine(Program.BaseDirectoryInternal, "data", "libretro_cores.tar")))
+            using (var reader = ReaderFactory.OpenReader(archiveStream))
             {
                 while (reader.MoveToNextEntry())
                 {
+                    if (reader.Entry.IsDirectory)
+                        continue;
+
                     var file = reader.Entry.Key;
 
                     Match m = Regex.Match(file, "^(?:[^/]*/)?(.*)_libretro\\.info");
                     if (m.Success && !string.IsNullOrEmpty(m.Groups[1].ToString()))
                     {
-                        var fileStream = reader.OpenEntryStream();
-                        var bin = m.Groups[1].ToString();
-                        var core = parseInfoFile(fileStream, bin);
-                        fileStream.Close();
-                        if (core != null)
-                            cores[bin] = core;
+                        using (var fileStream = reader.OpenEntryStream())
+                        {
+                            var bin = m.Groups[1].ToString();
+                            var core = parseInfoFile(fileStream, bin);
+                            if (core != null)
+                                cores[bin] = core;
+                        }
                     }
                 }
             }

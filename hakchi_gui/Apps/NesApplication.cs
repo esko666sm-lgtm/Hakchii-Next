@@ -3,6 +3,7 @@ using Hakchii.Next.Core.Games;
 using Newtonsoft.Json;
 using pdj.tiny7z.Archive;
 using SharpCompress.Archives;
+using SharpCompress.Readers;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,8 +40,8 @@ namespace com.clusterrr.hakchi_gui
             try
             {
                 string desktopEntriesArchiveFile = Path.Combine(Path.Combine(Program.BaseDirectoryInternal, "data"), "desktop_entries.tar");
-                using (var extractor = ArchiveFactory.OpenArchive(desktopEntriesArchiveFile))
-                using (var reader = extractor.ExtractAllEntries())
+                using (var archiveStream = File.OpenRead(desktopEntriesArchiveFile))
+                using (var reader = ReaderFactory.OpenReader(archiveStream))
                     while (reader.MoveToNextEntry())
                     {
                         if (reader.Entry.IsDirectory)

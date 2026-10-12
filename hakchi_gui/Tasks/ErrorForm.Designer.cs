@@ -84,6 +84,7 @@
             // 
             resources.ApplyResources(this.copyToClipboardToolStripMenuItem, "copyToClipboardToolStripMenuItem");
             this.copyToClipboardToolStripMenuItem.Name = "copyToClipboardToolStripMenuItem";
+            this.copyToClipboardToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C;
             this.copyToClipboardToolStripMenuItem.Click += new System.EventHandler(this.copyToClipboardToolStripMenuItem_Click);
             // 
             // panel1

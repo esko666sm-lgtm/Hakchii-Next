@@ -1450,6 +1450,7 @@
             // 
             this.editROMHeaderToolStripMenuItem.Name = "editROMHeaderToolStripMenuItem";
             resources.ApplyResources(this.editROMHeaderToolStripMenuItem, "editROMHeaderToolStripMenuItem");
+            this.editROMHeaderToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.E;
             this.editROMHeaderToolStripMenuItem.Click += new System.EventHandler(this.editROMHeaderToolStripMenuItem_Click);
             // 
             // toolStripMenuItem9
