@@ -71,7 +71,20 @@ namespace Hakchii.Next.Core.Modules
                     if (installed.Contains(dependencyId))
                         continue;
 
-                    var dependency = await repository.GetAsync(dependencyId, cancellationToken).ConfigureAwait(false);
+                    ModulePackage dependency;
+                    try
+                    {
+                        dependency = await repository.GetAsync(dependencyId, cancellationToken).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        return OperationResult.Fail("Failed to resolve module dependency " + dependencyId + ": " + ex.Message);
+                    }
+
                     if (dependency == null)
                         return OperationResult.Fail("Missing module dependency: " + dependencyId);
 
@@ -86,7 +99,23 @@ namespace Hakchii.Next.Core.Modules
                         return dependencyResult;
                 }
 
-                var result = await installer.InstallAsync(package, cancellationToken).ConfigureAwait(false);
+                OperationResult result;
+                try
+                {
+                    result = await installer.InstallAsync(package, cancellationToken).ConfigureAwait(false);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    return OperationResult.Fail("Failed to install module " + package.Id + ": " + ex.Message);
+                }
+
+                if (result == null)
+                    return OperationResult.Fail("Module installer returned no result: " + package.Id);
+
                 if (result.Success)
                 {
                     installed.Add(package.Id);
