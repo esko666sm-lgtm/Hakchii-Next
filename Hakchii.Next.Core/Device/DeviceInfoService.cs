@@ -25,7 +25,7 @@ namespace Hakchii.Next.Core.Device
 
         public DeviceInfoService(IDeviceCommandTransport transport)
         {
-            this.transport = transport;
+            this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
         }
 
         public async Task<string> ReadHardwareIdAsync(CancellationToken ct)

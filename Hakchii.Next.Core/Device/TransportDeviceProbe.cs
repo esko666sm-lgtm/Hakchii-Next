@@ -26,12 +26,29 @@ namespace Hakchii.Next.Core.Device
             {
                 hardwareId = await info.ReadHardwareIdAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (InvalidOperationException)
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception)
             {
                 return new DeviceProbeResult { Found = false };
             }
 
-            var systemCode = (await transport.ExecuteAsync("hakchi eval 'echo \\\"$sftype-$sfregion\\\"'", cancellationToken).ConfigureAwait(false)).Trim();
+            string systemCode;
+            try
+            {
+                systemCode = (await transport.ExecuteAsync("hakchi eval 'echo \\\"$sftype-$sfregion\\\"'", cancellationToken).ConfigureAwait(false)).Trim();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception)
+            {
+                return new DeviceProbeResult { Found = false };
+            }
+
             if (string.IsNullOrWhiteSpace(systemCode))
                 return new DeviceProbeResult { Found = false };
 
