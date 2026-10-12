@@ -3688,7 +3688,10 @@ internal static
                 foreach (RepositoryInfo repo in ConfigIni.Instance.repos)
                 {
                     var menuItem = new ToolStripMenuItem(repo.Name) { Tag = repo.URL };
-                    menuItem.Click += repoMenuItem_Click;
+                    if (string.Equals(repo.URL, "modstore://", StringComparison.OrdinalIgnoreCase))
+                        menuItem.Enabled = false;
+                    else
+                        menuItem.Click += repoMenuItem_Click;
                     repoMenuItems.Add(menuItem);
 
                     var index = modulesToolStripMenuItem.DropDownItems.IndexOf(modRepoEndSeparator);
@@ -3706,21 +3709,17 @@ internal static
                 if (unboxed.Tag is string && unboxed.Tag != null)
                 {
                     var url = (string)(unboxed.Tag);
-                    if (url == "modstore://")
+                    if (string.Equals(url, "modstore://", StringComparison.OrdinalIgnoreCase))
+                        return;
+
+                    var repo = new ModHub.Repository.Repository(url);
+                    if (repo.LoadTasker(this) != null)
                     {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        var repo = new ModHub.Repository.Repository(url);
-                        if (repo.LoadTasker(this) != null)
+                        using (var hub = new ModHub.ModHubForm())
                         {
-                            using (var hub = new ModHub.ModHubForm())
-                            {
-                                hub.Text = unboxed.Text;
-                                hub.LoadData(repo);
-                                hub.ShowDialog(this);
-                            }
+                            hub.Text = unboxed.Text;
+                            hub.LoadData(repo);
+                            hub.ShowDialog(this);
                         }
                     }
                 }
