@@ -14,6 +14,12 @@ namespace Hakchii.Next.Core.Emulation
             if (core == null || string.IsNullOrWhiteSpace(core.Id)) return OperationResult.Fail("Core id is required");
             if (core.Systems == null || core.Systems.Count == 0) return OperationResult.Fail("Core must support at least one system");
 
+            core.Systems = core.Systems
+                .Where(system => system != GameSystem.Unknown && Enum.IsDefined(typeof(GameSystem), system))
+                .Distinct()
+                .ToArray();
+            if (core.Systems.Count == 0) return OperationResult.Fail("Core must support at least one valid system");
+
             core.Id = core.Id.Trim();
             core.Command = string.IsNullOrWhiteSpace(core.Command) ? null : core.Command.Trim();
             core.Arguments = string.IsNullOrWhiteSpace(core.Arguments) ? null : core.Arguments.Trim();
@@ -22,7 +28,17 @@ namespace Hakchii.Next.Core.Emulation
                 return OperationResult.Fail("Core arguments require an explicit command");
             if (cores.ContainsKey(core.Id)) return OperationResult.Fail("Core already registered: " + core.Id);
 
-            cores.Add(core.Id, core);
+            var snapshot = new EmulatorCore
+            {
+                Id = core.Id,
+                DisplayName = core.DisplayName,
+                Systems = core.Systems.ToArray(),
+                Installed = core.Installed,
+                Command = core.Command,
+                Arguments = core.Arguments
+            };
+
+            cores.Add(snapshot.Id, snapshot);
             return OperationResult.Ok();
         }
         public EmulatorCore Find(string id)
