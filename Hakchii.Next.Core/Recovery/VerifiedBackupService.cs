@@ -55,8 +55,19 @@ namespace Hakchii.Next.Core.Recovery
             var verified = await VerifyAsync(image, ct).ConfigureAwait(false);
             if (!verified.Success) return verified;
 
-            var result = await transport.WriteAsync((byte[])image.Data.Clone(), ct).ConfigureAwait(false);
-            return result ?? OperationResult.Fail("Backup transport returned no restore result");
+            try
+            {
+                var result = await transport.WriteAsync((byte[])image.Data.Clone(), ct).ConfigureAwait(false);
+                return result ?? OperationResult.Fail("Backup transport returned no restore result");
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                return OperationResult.Fail("Backup restore failed: " + ex.Message);
+            }
         }
 
         private static string ComputeSha256(byte[] data)
