@@ -21,6 +21,8 @@ namespace Hakchii.Next.Core.Recovery
                 throw new ArgumentException("Path is required", nameof(path));
             if (!File.Exists(path))
                 throw new FileNotFoundException("File does not exist", path);
+            if (new FileInfo(path).Length == 0)
+                throw new InvalidDataException("Recovery file is empty");
 
             return new FileIntegrityGuard(path, ComputeSha256(path));
         }
@@ -30,7 +32,16 @@ namespace Hakchii.Next.Core.Recovery
             if (!File.Exists(path))
                 return OperationResult.Fail("Selected recovery file no longer exists");
 
-            var current = ComputeSha256(path);
+            string current;
+            try
+            {
+                current = ComputeSha256(path);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                return OperationResult.Fail("Unable to verify selected recovery file: " + ex.Message);
+            }
+
             if (!string.Equals(current, sha256, StringComparison.OrdinalIgnoreCase))
                 return OperationResult.Fail("Selected recovery file changed after validation");
 
