@@ -41,7 +41,14 @@ namespace Hakchii.Next.Core.Cheats
                 string.Equals(x.Id, cheat.Id, StringComparison.OrdinalIgnoreCase)))
                 return OperationResult.Fail("Cheat already exists for game: " + cheat.Id);
 
-            items.Add(cheat);
+            items.Add(new CheatEntry
+            {
+                Id = cheat.Id,
+                GameId = cheat.GameId,
+                Name = cheat.Name,
+                Code = cheat.Code,
+                Enabled = cheat.Enabled
+            });
             return OperationResult.Ok();
         }
 
