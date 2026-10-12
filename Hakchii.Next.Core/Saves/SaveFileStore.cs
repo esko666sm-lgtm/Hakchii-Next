@@ -12,7 +12,12 @@ namespace Hakchii.Next.Core.Saves
         OperationResult Save(SaveSnapshot snapshot);
     }
 
-    public sealed class SaveFileStore : ISaveBackupStore
+    public interface ISaveBackupHistoryStore
+    {
+        IReadOnlyCollection<SaveSnapshot> List(string gameId);
+    }
+
+    public sealed class SaveFileStore : ISaveBackupStore, ISaveBackupHistoryStore
     {
         private readonly string rootDirectory;
 

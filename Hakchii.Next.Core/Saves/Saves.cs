@@ -73,6 +73,44 @@ namespace Hakchii.Next.Core.Saves
             return backups.TryGetValue(gameId ?? string.Empty, out var stack) ? stack.Count : 0;
         }
 
+        public OperationResult ReloadPersistentHistory(string gameId)
+        {
+            if (string.IsNullOrWhiteSpace(gameId))
+                return OperationResult.Fail("Game id is required");
+
+            var historyStore = persistentStore as ISaveBackupHistoryStore;
+            if (historyStore == null)
+                return OperationResult.Fail("Persistent store does not support history loading");
+
+            var items = historyStore.List(gameId);
+            var valid = new List<SaveSnapshot>();
+            foreach (var snapshot in items)
+            {
+                if (snapshot == null || snapshot.Data == null || snapshot.Data.Length == 0)
+                    continue;
+                if (!string.Equals(snapshot.GameId, gameId, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                valid.Add(new SaveSnapshot
+                {
+                    GameId = snapshot.GameId,
+                    Data = (byte[])snapshot.Data.Clone(),
+                    CreatedUtc = snapshot.CreatedUtc
+                });
+            }
+
+            if (valid.Count == 0)
+                return OperationResult.Fail("No persistent save backups found");
+
+            valid.Sort((a, b) => a.CreatedUtc.CompareTo(b.CreatedUtc));
+            var stack = new Stack<SaveSnapshot>();
+            foreach (var snapshot in valid)
+                stack.Push(snapshot);
+
+            TrimHistory(stack);
+            backups[gameId] = stack;
+            return OperationResult.Ok();
+        }
+
         public async Task<OperationResult> RestoreLatestAsync(string gameId, CancellationToken ct)
         {
             if (!backups.TryGetValue(gameId, out var stack) || stack.Count == 0)
